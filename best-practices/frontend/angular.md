@@ -1,40 +1,46 @@
-### Angular Best Practices
+# Angular Best Practices
 
 ## 📋 Table of Contents
 
 - [Project Structure & Architecture](#project-structure--architecture)
+  - [Example Project Structure](#example-project-structure)
   - [Feature Structure Guidelines](#feature-structure-guidelines)
-- [Key Principles](#key-principles)
-- [Visibility Modifiers](#visibility-modifiers)
-- [File Naming Conventions](#file-naming-conventions)
-- [Component Structure](#component-structure)
+  - [Key Principles](#key-principles) TODO
+  - [Visibility Modifiers](#visibility-modifiers)
+  - [File Naming Conventions](#file-naming-conventions)
+  - [Smart/Dumb Components Pattern](#smartdumb-components-pattern)
 - [Components & Templates](#components--templates)
-- [Services & Dependency Injection](#services--dependency-injection)
-- [RxJS & State Management](#rxjs--state-management)
-- [Signals](#signals)
-- [Reusability](#reusability)
-- [Code Style & Conventions](#code-style--conventions)
-- [Testing](#testing)
-- [Performance](#performance)
-- [Security](#security)
-- [Documentation](#documentation)
-- [Dos & Don'ts](#dos--donts)
-- [Routing & Navigation](#routing--navigation)
-- [HTTP & API Integration](#http--api-integration)
-- [Error Handling & Logging](#error-handling--logging)
-- [Lifecycle Hooks](#lifecycle-hooks)
-- [Styling & UI](#styling--ui)
-- [Forms](#forms)
-- [Authentication & Authorization](#authentication--authorization)
-- [Advanced Testing](#advanced-testing)
-- [Packaging](#packaging)
-- [Accessibility (A11y)](#accessibility-a11y)
-- [Tooling](#tooling)
-- [Clean Code](#clean-code)
+  - [Component Structure](#component-structure) TODO
+  - [Input/Output Best Practices](#inputoutput-best-practices)
+  - [Async Pipe vs Manual Subscribe](#async-pipe-vs-manual-subscribe)
+- [Services & Dependency Injection](#services--dependency-injection) TODO
+- [RxJS & State Management](#rxjs--state-management) TODO
+- [Signals](#signals) TODO
+- [Reusability](#reusability) TODO
+- [Code Style & Conventions](#code-style--conventions) TODO
+- [Testing](#testing) TODO
+- [Performance](#performance) TODO
+- [Security](#security) TODO
+- [Documentation](#documentation) TODO
+- [Dos & Don'ts](#dos--donts) TODO
+- [Routing & Navigation](#routing--navigation) TODO
+- [HTTP & API Integration](#http--api-integration) TODO
+- [Error Handling & Logging](#error-handling--logging) TODO
+- [Lifecycle Hooks](#lifecycle-hooks) TODO
+- [Styling & UI](#styling--ui) TODO
+- [Forms](#forms) TODO
+- [Authentication & Authorization](#authentication--authorization) TODO
+- [Advanced Testing](#advanced-testing) TODO
+- [Packaging](#packaging) TODO
+- [Accessibility (A11y)](#accessibility-a11y) TODO
+- [Tooling](#tooling) TODO
+- [Clean Code](#clean-code) TODO
 
 ---
 
 # Project Structure & Architecture
+
+## Example Project Structure
 
 ```
 src/app/
@@ -144,7 +150,7 @@ src/app/
 1. ✅ Prefer class and style over ngClass and ngStyle
 1. ✅ Name event handlers for what they do, not for the triggering event (`handleClick()` => `saveUserData()`)
 
-# **Visibility Modifiers**
+## **Visibility Modifiers**
 
 Use appropriate access modifiers to control visibility and improve encapsulation:
 
@@ -168,7 +174,7 @@ Use appropriate access modifiers to control visibility and improve encapsulation
 
 > 💡 **Best Practice**: Use `protected` instead of `public` for template-accessible members. This signals that the member is for internal use (class + template), not part of the component's external API.
 
-# **File Naming Conventions**
+## **File Naming Conventions**
 
 - **kebab-case** for file names, **CamelCase** for class names (e.g., `BlogPost` class → `blog-post.ts` file)
 - **Co-locate related files** with the same base name: `blog-post.ts`, `blog-post.html`, `blog-post.css`, `blog-post.spec.ts`
@@ -186,7 +192,70 @@ Use appropriate access modifiers to control visibility and improve encapsulation
 - Models: `post.model.ts` or `post.ts` (for interfaces/types)
 - Routes: `blog.routes.ts`
 
-# **Component Structure**
+## Smart/Dumb Components Pattern
+
+This is a common pattern for component-based programming. An article by Dan Abramov from 2015 can be found [here](https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0). It was first described for React, but nowadays it's a fundamental principle that has been adopted and adapted by many libraries and frameworks. He introduced a pattern to separate components into two categories:
+
+1. Smart Components (or Container Components)
+2. Dumb Components (or Presentational Components).
+
+These two categories separate the view from the application logic.
+
+### Smart Components
+
+These Components care about <strong><em>what</em></strong> data is shown to the user.
+
+- Hold state and business logic
+- Inject services and make API calls
+- Manage data flow
+- Template mostly just passes data to dumb components and handles their events
+- Example: `UserListPage` fetches users and handles deletion
+
+```typescript
+export class UserListPage {
+  private userService = inject(UserService);
+  protected users = signal<User[]>([]);
+
+  protected handleDelete(id: string) {
+    this.userService.delete(id).subscribe(/*...*/);
+  }
+}
+```
+
+```typescript
+@for (user of users(); track user.id) {
+  <app-user-card [user]="user" (delete)="handleDelete($event)" />
+}
+```
+
+### Dumb Components
+
+These Components care about <strong><em>how</em></strong> data is shown to the user.
+
+- Only receive data via input()
+- Emit events via output()
+- No (or minimal) service injection
+- Focus on UI logic only
+- Highly reusable and testable
+- Example `UserCard` displays a user which is used by the smart component, emits `userClicked` event
+
+```typescript
+export class UserCard {
+  readonly user = input.required<User>();
+  readonly delete = output<string>();
+
+  /**
+   * Emits the user ID when the delete button is clicked.
+   */
+  protected onDeleteClick(): void {
+    this.delete.emit(this.user().id);
+  }
+}
+```
+
+# Components & Templates
+
+## **Component Structure**
 
 ```typescript
 // Modern Angular 21+ component with signals
@@ -244,7 +313,135 @@ export class BlogPost {
 }
 ```
 
-# Components & Templates
+## Input/Output Best Practices
+
+Sharing data between parent and child components is a common pattern, with Angular you can achieve this by using input() and output() functions. For a more detailed explanation visit the official Guide by Angular for [inputs](https://angular.dev/guide/components/inputs) or [outputs](https://angular.dev/guide/components/outputs).
+
+- Used for clear and type-safe bindings
+- Prefer `readonly` for inputs to prevent mutation from child components
+- Descriptive names (avoid generic names like `data`)
+- Use required inputs for mandatory data `input.required<Type>()`
+- Use output for event communication, not data passing back and forth
+- Avoid two-way binding, except for simple cases like form controls
+- Document input/outputs for better IDE support
+- Co-locate input/outputs at the top of the class for visibility
+- Emit output only in response to user actions or lifecycle events
+- Avoid logic in templates, pass data and handle events in the component class
+- If a default value is used, TS can infer the type e.g. `input(0)` => number
+- If no default value is set, the value is undefined e.g. `input<number>()` the type is `<number | undefined>` and value `undefined`.
+
+> 💡 **Note**: The `input()` and `output()` functions are a Angular v16+ feature.
+
+**Example:**
+
+```typescript
+export class UserCard {
+  /**
+   * The user object to display in the card.
+   * @type {User}
+   * @required
+   */
+  readonly user = input.required<User>();
+  /**
+   * Emits when the user is deleted. Output is typically the user ID or a message.
+   */
+  readonly delete = output<string>();
+
+  protected onDeleteClick(): void {
+    this.delete.emit(this.user().id);
+  }
+}
+
+<!-- Example usage in template -->
+<button (click)="onDeleteClick()">Delete</button>
+```
+
+## Advanced Usage
+
+### Transform
+
+Whenever the value of a bound input changes, the transform function is executed and its result is assigned to the input property.
+
+**Example:**
+
+```typescript
+export class UserCard {
+  email = input("", { transform: trimString });
+
+  function trimString(value: string | undefined): string {
+    return value?.trim() ?? '';
+  }
+}
+
+<!-- Example usage in template -->
+<custom-input [email]="newsletter" />
+```
+
+Inside the template, when defining a event listener, event data can be accessed with $event, e.g. `<professional-logger (valueChanged)="logValue($event)" />`
+
+### Two-way binding
+
+Two-way binding keeps the model and view in sync automatically:
+
+- When the model changes, the view updates
+- When the view changes (user input), the model updates
+
+Use the `[(ngModel)]` directive for two-way binding:
+
+**Example:**
+
+```html
+<!-- Two-way binding with banana-in-a-box syntax -->
+<input [(userName)]="userName" />
+<p>Hello, {{ userName }}!</p>
+```
+
+> 💡 **Note**: The best use-case for two-way bindings is with simple forms or simple inputs, else consider using signals or one-way binding.
+
+### Old decorator @Input and @Output
+
+Although the modern input() and output() functions are recommended, you may still see the older @Input and @Output decorator in legacy Angular code. The way you bind inputs in the template remains the same (see UserCard above), but the class property syntax is different.
+
+@Input supports options (similar to input() options) like required, transform functions, and aliases. You can also use getters and setters, though Angular generally does not recommend this approach.
+
+@Output also supports the alias option.
+
+```typescript
+@Component({
+  /*...*/
+})
+export class UserCard {
+  @Input() firstName = "Max";
+  @Output() delete = new EventEmitter<void>();
+}
+```
+
+### Inheriting Inputs/Outputs
+
+You can inherit input/output properties from a parent class using the `inputs` or `outputs` array in the `@Component` decorator. This is useful for creating reusable base components.
+
+**Example:**
+
+```typescript
+// Base component with an input/output property
+export class UserCardBase {
+  readonly highlight = input<boolean>(false);
+  readonly delete = output<string>();
+}
+
+// Child component inherits 'highlight' and 'delete' from UserCardBase
+@Component({
+  selector: "app-user-card",
+  templateUrl: "./user-card.html",
+  inputs: ["highlight"],
+  outputs: ["delete"],
+})
+export class UserCard extends UserCardBase {}
+```
+
+## Async Pipe vs Manual Subscribe
+
+Instead of manually subscribing, let Angular handle async streams in templates.
 
 # Services & Dependency Injection
 
