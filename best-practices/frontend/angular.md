@@ -10,31 +10,9 @@
   - [File Naming Conventions](#file-naming-conventions)
   - [Smart/Dumb Components Pattern](#smartdumb-components-pattern)
 - [Components & Templates](#components--templates)
-  - [Component Structure](#component-structure) TODO
+  - [Component Structure](#component-structure)
   - [Input/Output Best Practices](#inputoutput-best-practices)
   - [Async Pipe vs Manual Subscribe](#async-pipe-vs-manual-subscribe)
-- [Services & Dependency Injection](#services--dependency-injection) TODO
-- [RxJS & State Management](#rxjs--state-management) TODO
-- [Signals](#signals) TODO
-- [Reusability](#reusability) TODO
-- [Code Style & Conventions](#code-style--conventions) TODO
-- [Testing](#testing) TODO
-- [Performance](#performance) TODO
-- [Security](#security) TODO
-- [Documentation](#documentation) TODO
-- [Dos & Don'ts](#dos--donts) TODO
-- [Routing & Navigation](#routing--navigation) TODO
-- [HTTP & API Integration](#http--api-integration) TODO
-- [Error Handling & Logging](#error-handling--logging) TODO
-- [Lifecycle Hooks](#lifecycle-hooks) TODO
-- [Styling & UI](#styling--ui) TODO
-- [Forms](#forms) TODO
-- [Authentication & Authorization](#authentication--authorization) TODO
-- [Advanced Testing](#advanced-testing) TODO
-- [Packaging](#packaging) TODO
-- [Accessibility (A11y)](#accessibility-a11y) TODO
-- [Tooling](#tooling) TODO
-- [Clean Code](#clean-code) TODO
 
 ---
 
@@ -303,7 +281,7 @@ export class BlogPost {
 
   // Use computed for derived state
   protected readonly publishedPosts = computed(() =>
-    this.posts().filter((post) => post.published)
+    this.posts().filter((post) => post.published),
   );
 
   // Example of emitting output
@@ -442,47 +420,3 @@ export class UserCard extends UserCardBase {}
 ## Async Pipe vs Manual Subscribe
 
 Instead of manually subscribing, let Angular handle async streams in templates.
-
-# Services & Dependency Injection
-
-# RxJS & State Management
-
-# Signals
-
-# Reusability
-
-# Code Style & Conventions
-
-# Testing
-
-# Performance
-
-# Security
-
-# Documentation
-
-# Dos & Don'ts
-
-# Routing & Navigation
-
-# HTTP & API Integration
-
-# Error Handling & Logging
-
-# Lifecycle Hooks
-
-# Styling & UI
-
-# Forms
-
-# Authentication & Authorization
-
-# Advanced Testing
-
-# Packaging
-
-# Accessibility (A11y)
-
-# Tooling
-
-# Clean Code
