@@ -740,6 +740,19 @@ async function handleClick(e) {
 
 ## Children Patterns
 
+**Use children as dynamic blocks to avoid prop explosion:**
+
+```jsx
+// ❌ Too many props
+<Card title="Title" body="..." footer="..." actions={...} />
+
+// ✅ Use children as a dynamic block
+<Card title="Title">
+  <p>Body content</p>
+  <Actions />
+</Card>
+```
+
 ```jsx
 // ✅ Children as function (render props)
 <DataProvider>
@@ -763,6 +776,34 @@ function List({ children }) {
     cloneElement(child, { index })
   );
 }
+```
+
+**Related patterns to avoid blowing up props:**
+
+```jsx
+// ✅ Smart/Dumb (Container/Presentational)
+function UsersContainer() {
+  const [users, setUsers] = useState([]);
+  return <UsersList users={users} onDelete={(id) => setUsers(u => u.filter(x => x.id !== id))} />;
+}
+
+function UsersList({ users, onDelete }) {
+  return users.map(user => <UserRow key={user.id} user={user} onDelete={onDelete} />);
+}
+```
+
+```jsx
+// ✅ Compound components (shared state via context)
+<Tabs defaultValue="profile">
+  <Tabs.List>
+    <Tabs.Tab value="profile">Profile</Tabs.Tab>
+    <Tabs.Tab value="settings">Settings</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panels>
+    <Tabs.Panel value="profile">...</Tabs.Panel>
+    <Tabs.Panel value="settings">...</Tabs.Panel>
+  </Tabs.Panels>
+</Tabs>
 ```
 
 ## TypeScript Best Practices
