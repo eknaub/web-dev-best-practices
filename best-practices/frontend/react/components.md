@@ -5,6 +5,8 @@
   - [List Rendering & Keys](#list-rendering--keys)
   - [Props Best Practices](#props-best-practices)
   - [Composition pattern](#composition-pattern)
+  - [Compound pattern](#compound-component-pattern)
+  - [Smart/Dumb Components Pattern](#smartdumb-components-pattern)
   - [Default props pattern](#default-props-pattern)
   - [Prop drilling vs composition vs context](#prop-drilling-vs-composition-vs-context)
 
@@ -449,6 +451,157 @@ function App() {
 }
 ```
 
+## Compound pattern
+
+Essentially this is a set of components that work together through shared state or context. A simple existing example is the native `select` element combined with one or multiple `option` elements.
+
+### Simple Example
+
+```jsx
+// Compound component: Tabs
+function Tabs({ children, defaultValue }: { children: React.ReactNode; defaultValue: string }) {
+  const [active, setActive] = React.useState(defaultValue);
+
+  return (
+    <TabsContext.Provider value={{ active, setActive }}>
+      <div className="tabs">{children}</div>
+    </TabsContext.Provider>
+  );
+}
+
+const TabsContext = React.createContext<{
+  active: string;
+  setActive: (value: string) => void;
+} | null>(null);
+
+function TabList({ children }: { children: React.ReactNode }) {
+  return <div className="tab-list">{children}</div>;
+}
+
+function Tab({ value, children }: { value: string; children: React.ReactNode }) {
+  const ctx = React.useContext(TabsContext);
+  if (!ctx) throw new Error('Tab must be used within Tabs');
+
+  const isActive = ctx.active === value;
+  return (
+    <button
+      className={isActive ? 'tab active' : 'tab'}
+      onClick={() => ctx.setActive(value)}
+    >
+      {children}
+    </button>
+  );
+}
+
+function TabPanels({ children }: { children: React.ReactNode }) {
+  return <div className="tab-panels">{children}</div>;
+}
+
+function TabPanel({ value, children }: { value: string; children: React.ReactNode }) {
+  const ctx = React.useContext(TabsContext);
+  if (!ctx || ctx.active !== value) return null;
+  return <div className="tab-panel">{children}</div>;
+}
+
+// Usage
+function App() {
+  return (
+    <Tabs defaultValue="profile">
+      <TabList>
+        <Tab value="profile">Profile</Tab>
+        <Tab value="settings">Settings</Tab>
+      </TabList>
+
+      <TabPanels>
+        <TabPanel value="profile">Profile content</TabPanel>
+        <TabPanel value="settings">Settings content</TabPanel>
+      </TabPanels>
+    </Tabs>
+  );
+}
+```
+
+## Smart/Dumb Components Pattern
+
+This is a common pattern for component-based programming. An article by Dan Abramov from 2015 can be found [here](https://medium.com/@dan_abramov/smart-and-dumb-components-7ca2f9a7c7d0). He introduced a pattern to separate components into two categories:
+
+1. Smart Components (or Container Components)
+2. Dumb Components (or Presentational Components).
+
+These two categories separate the view from the application logic.
+
+### Smart Components
+
+These Components care about <strong><em>what</em></strong> data is shown to the user.
+
+- Hold state and business logic
+- Call APIs and handle side effects (often in hooks like `useEffect`)
+- Manage data flow
+- Render mostly passes data to dumb components and handles their callbacks
+- Example: `UserListPage` fetches users and handles deletion
+
+```tsx
+type User = { id: string; name: string; email: string };
+
+function UserListPage() {
+  const [users, setUsers] = React.useState<User[]>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch('/api/users')
+      .then((res) => res.json())
+      .then((data: User[]) => {
+        if (isMounted) setUsers(data);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleDelete = (id: string) => {
+    fetch(`/api/users/${id}`, { method: 'DELETE' })
+      .then(() => setUsers((prev) => prev.filter((u) => u.id !== id)));
+  };
+
+  return (
+    <div>
+      {users.map((user) => (
+        <UserCard key={user.id} user={user} onDelete={handleDelete} />
+      ))}
+    </div>
+  );
+}
+```
+
+### Dumb Components
+
+These Components care about <strong><em>how</em></strong> data is shown to the user.
+
+- Receive data via props
+- Emit events via callback props (e.g. `onDelete`)
+- Focus on UI logic only
+- Highly reusable and testable
+- Example `UserCard` displays a user which is used by the smart component, emits `onDelete` event
+
+```tsx
+type UserCardProps = {
+  user: User;
+  onDelete: (id: string) => void;
+};
+
+function UserCard({ user, onDelete }: UserCardProps) {
+  return (
+    <div className="user-card">
+      <div>
+        <strong>{user.name}</strong>
+        <div>{user.email}</div>
+      </div>
+      <button onClick={() => onDelete(user.id)}>Delete</button>
+    </div>
+  );
+}
+```
+
 ## Default props pattern
 
 Default props allow you to specify fallback values for props that are not provided by the parent component. This is useful for providing sensible defaults and making components more flexible.
@@ -596,3 +749,15 @@ function UserList() {
 4. **Does data change frequently?** → Consider **state management library** instead of Context
 
 > 💡 **Info**: Start with props, refactor to composition, use Context only when necessary. Avoid premature optimization.
+
+### Controlled vs Uncontrolled Components
+
+### Component variants pattern (button variants, card types)
+
+### Polymorphic components (as prop pattern)
+
+### Forwarding refs properly (forwardRef usage and patterns)
+
+### Advanced Composition Patterns - Children as function pattern // Slot pattern for flexible composition // Headless component pattern (separation of logic and UI)
+
+
