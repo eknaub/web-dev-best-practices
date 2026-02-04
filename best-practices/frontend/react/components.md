@@ -458,68 +458,59 @@ Essentially this is a set of components that work together through shared state 
 ### Simple Example
 
 ```jsx
-// Compound component: Tabs
-function Tabs({ children, defaultValue }: { children: React.ReactNode; defaultValue: string }) {
-  const [active, setActive] = React.useState(defaultValue);
+function Menu({ children }) {
+    const [open, setOpen] = React.useState(true)
 
-  return (
-    <TabsContext.Provider value={{ active, setActive }}>
-      <div className="tabs">{children}</div>
-    </TabsContext.Provider>
-  );
+    function toggle() {
+        setOpen(prevOpen => !prevOpen)
+    }
+
+    return (
+        <div className="menu">
+            {children}
+        </div>
+    )
 }
 
-const TabsContext = React.createContext<{
-  active: string;
-  setActive: (value: string) => void;
-} | null>(null);
-
-function TabList({ children }: { children: React.ReactNode }) {
-  return <div className="tab-list">{children}</div>;
+function MenuButton({ children, onClick }) {
+    return (
+        <Button onClick={onClick}>{children}</Button>
+    )
 }
 
-function Tab({ value, children }: { value: string; children: React.ReactNode }) {
-  const ctx = React.useContext(TabsContext);
-  if (!ctx) throw new Error('Tab must be used within Tabs');
-
-  const isActive = ctx.active === value;
-  return (
-    <button
-      className={isActive ? 'tab active' : 'tab'}
-      onClick={() => ctx.setActive(value)}
-    >
-      {children}
-    </button>
-  );
+function MenuDropdown({ children }) {
+    return (
+        <div className="menu-dropdown">
+            {children}
+        </div>
+    )
 }
 
-function TabPanels({ children }: { children: React.ReactNode }) {
-  return <div className="tab-panels">{children}</div>;
-}
-
-function TabPanel({ value, children }: { value: string; children: React.ReactNode }) {
-  const ctx = React.useContext(TabsContext);
-  if (!ctx || ctx.active !== value) return null;
-  return <div className="tab-panel">{children}</div>;
+function MenuItem({ children }) {
+    return (
+        <div className="menu-item">
+            {children}
+        </div>
+    )
 }
 
 // Usage
 function App() {
-  return (
-    <Tabs defaultValue="profile">
-      <TabList>
-        <Tab value="profile">Profile</Tab>
-        <Tab value="settings">Settings</Tab>
-      </TabList>
+  const sports = ["Tennis", "Pickleball", "Racquetball", "Squash"]
 
-      <TabPanels>
-        <TabPanel value="profile">Profile content</TabPanel>
-        <TabPanel value="settings">Settings content</TabPanel>
-      </TabPanels>
-    </Tabs>
+  return (
+    <Menu>
+      <MenuButton>Sports</MenuButton>
+      <MenuDropdown>
+        {sports.map(sport => (
+          <MenuItem key={sport}>{sport}</MenuItem>
+        ))}
+      </MenuDropdown>
+    </Menu>
   );
 }
 ```
+> 💡 **Note**: This adds a lot of flexibility, if you wanted to, you could change the sports name output to a component for example an anchor `<MenuItem key={sport}><a href="">{sport}</a></MenuItem>`.
 
 ## Smart/Dumb Components Pattern
 
