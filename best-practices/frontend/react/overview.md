@@ -15,6 +15,7 @@
   - [Fragment Best Practices](#fragment-best-practices)
   - [Ref Forwarding](#ref-forwarding)
   - [Accessibility Quick Wins](#accessibility-quick-wins)
+  - [Critical Accessibility Principles (Must-Dos)](#critical-accessibility-principles-must-dos)
   - [Form Handling Best Practices](#form-handling-best-practices)
   - [API/Fetch Patterns](#apifetch-patterns)
   - [React.StrictMode (Development Tool)](#reactstrictmode-development-tool)
@@ -607,6 +608,168 @@ useEffect(() => {
 const id = useId();
 <label htmlFor={id}>Name</label>
 <input id={id} />
+```
+
+## Critical Accessibility Principles (Must-Dos)
+
+These are the non-negotiable accessibility practices that have the biggest impact:
+
+1. **Semantic HTML is Everything**
+   - Use `<button>` not `<div role="button">`
+   - Use `<nav>`, `<main>`, `<article>`, `<section>` instead of generic divs
+   - Use `<label>` with `htmlFor` for form inputs (not placeholder-only)
+   - Semantic elements provide context to assistive technologies automatically
+
+2. **Keyboard Navigation Must Work**
+   - All interactive elements MUST be keyboard accessible
+   - Use natural tab order (don't rely on tabIndex unless necessary)
+   - Avoid `tabIndex > 0` (breaks natural tab flow)
+   - Test: Can you use the app with only a keyboard? If no, there's a problem.
+
+3. **Color is NOT the Only Way to Convey Information**
+   - ❌ "Error fields are red" - screen reader users don't know which field failed
+   - ✅ Add `aria-invalid="true"` and error text messages
+   - ✅ Use icons + text together, not icons alone for critical info
+   - ❌ "Click the blue button" - use `aria-label` instead
+
+4. **Text Contrast Must Meet WCAG Standards**
+   - Minimum 4.5:1 for normal text (level AA)
+   - 3:1 for large text (18pt+)
+   - Use tools like WebAIM Contrast Checker to verify
+
+5. **Images Need Alt Text (or aria-label)**
+   - `<img src="..." alt="Clear, descriptive text">`
+   - For decorative images: `alt=""`
+   - Alt text should convey meaning, not just describe ("submit button" not "blue rectangle")
+
+6. **Form Error Handling Must Be Clear**
+   ```jsx
+   // ✅ CORRECT: Associate error with input
+   <label htmlFor="email">Email</label>
+   <input 
+     id="email" 
+     aria-invalid={!!errors.email}
+     aria-describedby={errors.email ? "email-error" : undefined}
+   />
+   {errors.email && <span id="email-error" role="alert">{errors.email}</span>}
+   ```
+
+7. **Always Provide alt Text or aria-label**
+   - Logos, images, icons need description
+   - `aria-label="Close dialog"` for icon buttons
+   - Screen readers must understand what everything does
+
+8. **Focus Indicators Must Visible**
+   - ❌ Never remove focus outlines without replacing them: `outline: none;` → BAD
+   - ✅ Custom focus styles: `input:focus { outline: 2px solid #0066cc; }`
+   - Minimum 2px visible indicator with sufficient contrast
+
+9. **Announce Dynamic Changes (aria-live)**
+   ```jsx
+   // ✅ Assistive tech announces this when it updates
+   <div aria-live="polite" aria-atomic="true">
+     {notification}
+   </div>
+   ```
+
+10. **Test With Real Assistive Tech**
+    - Don't just check accessibility audit tools
+    - Test with screen readers (NVDA, JAWS, VoiceOver)
+    - Keyboard-only testing (can you use everything without a mouse?)
+
+### Essential ARIA Attributes
+
+```jsx
+// ✅ aria-label: Provides accessible name when no text content exists
+<button aria-label="Close dialog">×</button>
+<button aria-label="Open menu">≡</button>
+
+// ✅ aria-labelledby: Links to another element that labels this one
+<h2 id="dialog-title">Confirm Action</h2>
+<div role="dialog" aria-labelledby="dialog-title">
+  Are you sure?
+</div>
+
+// ✅ aria-describedby: Provides longer description
+<input 
+  aria-describedby="password-hint" 
+  type="password" 
+/>
+<span id="password-hint">Min 8 chars, 1 uppercase, 1 number</span>
+
+// ✅ aria-invalid: Indicates validation errors
+<input aria-invalid={!!error} aria-describedby="error-msg" />
+{error && <span id="error-msg" role="alert">{error}</span>}
+
+// ✅ aria-hidden: Hide from screen readers (ONLY use when needed)
+<span aria-hidden="true">→</span> {/* Decorative arrow */}
+<div aria-hidden="true">Decorative divider</div>
+
+// ✅ aria-disabled: Mark something as disabled (when native disabled won't work)
+<div aria-disabled="true" role="button">Disabled Action</div>
+
+// ✅ aria-expanded: Show if collapsible content is open/closed
+<button aria-expanded={isOpen} aria-controls="menu-items">
+  Menu
+</button>
+<ul id="menu-items" hidden={!isOpen}>
+  <li>Item 1</li>
+</ul>
+
+// ✅ aria-checked: For custom checkboxes/switches
+<div 
+  role="checkbox" 
+  aria-checked={isChecked}
+  onClick={toggleCheck}
+/>Remember me</div>
+
+// ✅ aria-pressed: For buttons that toggle state
+<button aria-pressed={isMuted} onClick={toggleMute}>
+  🔊 Mute
+</button>
+
+// ✅ aria-selected: For tabs, listbox items
+<div role="tab" aria-selected={isActive} aria-controls="tab-panel">
+  Profile
+</div>
+<div id="tab-panel" role="tabpanel" hidden={!isActive}>
+  Content
+</div>
+
+// ✅ aria-live: Announce dynamic updates (polite/assertive/off)
+<div aria-live="polite" aria-atomic="true">
+  {notification}
+</div>
+
+// ✅ aria-busy: Indicate loading state
+<div aria-busy={isLoading} aria-label="Loading data...">
+  {isLoading ? <Spinner /> : <Content />}
+</div>
+
+// ✅ aria-controls: Link button to what it controls
+<button aria-controls="mobile-menu" onClick={toggleMenu}>
+  ☰ Menu
+</button>
+<nav id="mobile-menu" hidden={!isOpen}>
+  Navigation items
+</nav>
+```
+
+**ARIA Attribute Priority:**
+- 🔴 **Critical**: `aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-hidden`
+- 🟡 **Important**: `aria-expanded`, `aria-pressed`, `aria-selected`, `aria-checked`, `aria-disabled`
+- 🟢 **Useful**: `aria-live`, `aria-atomic`, `aria-busy`, `aria-controls`
+
+**Golden Rule: Prefer semantic HTML over ARIA**
+```jsx
+// ❌ DON'T: Use ARIA to fix bad HTML
+<div role="button" aria-label="Submit">Submit</div>
+
+// ✅ DO: Use semantic HTML first
+<button>Submit</button>
+
+// ✅ ARIA is for enhancing, not replacing
+<button aria-label="Close">×</button> {/* Icon button needs label */}
 ```
 
 ## Form Handling Best Practices
