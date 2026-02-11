@@ -458,32 +458,39 @@ Essentially this is a set of components that work together through shared state 
 ### Simple Example
 
 ```jsx
+const MenuContext = React.createContext()
+
 function Menu({ children }) {
-    const [open, setOpen] = React.useState(true)
+    const [open, setOpen] = React.useState(false)
 
     function toggle() {
         setOpen(prevOpen => !prevOpen)
     }
 
     return (
-        <div className="menu">
-            {children}
-        </div>
+        <MenuContext.Provider value={{open, toggle}}>
+          <div className="menu">
+              {children}
+          </div>
+        </MenuContext.Provider>
     )
 }
 
-function MenuButton({ children, onClick }) {
+function MenuButton({ children }) {
+    const { toggle } = React.useContext(MenuContext)
     return (
-        <Button onClick={onClick}>{children}</Button>
+        <Button onClick={toggle}>{children}</Button>
     )
 }
 
 function MenuDropdown({ children }) {
-    return (
+    const { open } = React.useContext(MenuContext)
+
+    return open ? (
         <div className="menu-dropdown">
             {children}
         </div>
-    )
+    ) : null
 }
 
 function MenuItem({ children }) {
@@ -511,6 +518,68 @@ function App() {
 }
 ```
 > 💡 **Note**: This adds a lot of flexibility, if you wanted to, you could change the sports name output to a component for example an anchor `<MenuItem key={sport}><a href="">{sport}</a></MenuItem>`.
+
+### Compound component with dot syntax
+
+The compound components can also be organized using dot notation (`Menu.Button`, `Menu.Dropdown`, `Menu.Item`), which creates a more cohesive and discoverable API.
+
+**File structure:**
+```
+Menu/
+  ├── index.js
+  ├── Menu.jsx
+  ├── MenuButton.jsx
+  ├── MenuDropdown.jsx
+  └── MenuItem.jsx
+```
+
+**Implementation (Menu/index.js):**
+
+```jsx
+import Menu from "./Menu"
+import MenuButton from "./MenuButton"
+import MenuDropdown from "./MenuDropdown"
+import MenuItem from "./MenuItem"
+
+// Attach sub-components using dot notation
+Menu.Button = MenuButton;
+Menu.Dropdown = MenuDropdown;
+Menu.Item = MenuItem;
+
+export default Menu;
+```
+
+**Usage with dot syntax:**
+
+```jsx
+import Menu from "./Menu"
+
+function App() {
+  const sports = ["Tennis", "Pickleball", "Racquetball", "Squash"];
+
+  return (
+    <Menu>
+      <Menu.Button>Sports</Menu.Button>
+      <Menu.Dropdown>
+        {sports.map(sport => (
+          <Menu.Item key={sport}>
+            {sport}
+          </Menu.Item>
+        ))}
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
+```
+
+**Benefits of this approach:**
+
+- ✅ **Discoverability** - `Menu.Button` makes it clear what components belong to Menu
+- ✅ **Single import** - Import Menu and get all sub-components
+- ✅ **No prop drilling** - Context shares state automatically
+- ✅ **Better organization** - Related components in one folder
+- ✅ **Type safety** - Can be fully typed with TypeScript
+- ✅ **Encapsulation** - Sub-components are exposed only through parent
 
 ## Smart/Dumb Components Pattern
 
