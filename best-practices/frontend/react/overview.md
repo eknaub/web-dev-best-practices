@@ -1,8 +1,8 @@
 # React Overview
 
-## 📋 Table of Contents
+## Navigation Index
 
-- [⚡ Quick Reference](#-quick-reference)
+- [Quick Reference](#quick-reference)
   - [Golden Rules](#golden-rules)
   - [Common Pitfalls](#common-pitfalls)
   - [Performance Checklist](#performance-checklist)
@@ -13,7 +13,6 @@
   - [Error Handling Essentials](#error-handling-essentials)
   - [Conditional Rendering Patterns](#conditional-rendering-patterns)
   - [Fragment Best Practices](#fragment-best-practices)
-  - [Ref Forwarding](#ref-forwarding)
   - [Accessibility Quick Wins](#accessibility-quick-wins)
   - [Critical Accessibility Principles (Must-Dos)](#critical-accessibility-principles-must-dos)
   - [Form Handling Best Practices](#form-handling-best-practices)
@@ -26,1004 +25,283 @@
 
 ---
 
-# ⚡ Quick Reference
+# Quick Reference
 
 ## Golden Rules
 
 ### Hooks Rules (Non-negotiable)
-- ✅ Only call hooks at the top level (never in loops, conditions, or nested functions)
-- ✅ Only call hooks in React components or custom hooks
-- ✅ Custom hooks MUST start with `use` prefix
-- ✅ Dependencies arrays must include ALL values used inside the hook
+
+- Call hooks only at component/custom-hook top level.
+- Never call hooks in loops, conditions, or nested functions.
+- Keep dependency arrays complete and accurate.
+- Keep custom hook names prefixed with `use`.
 
 ### Component Essentials
-- ✅ Always provide stable `key` prop when rendering lists (never use index as key if list can change)
-- ✅ Keep components small and focused (single responsibility)
-- ✅ Prefer composition over prop drilling for deeply nested data
-- ✅ Never mutate state directly - always create new objects/arrays
-- ✅ Keep state as close as possible to where it's used (colocation)
+
+- Keep components focused on one responsibility.
+- Keep state close to where it is used.
+- Prefer composition before deep prop drilling.
+- Use stable IDs for list keys, not array indexes in dynamic lists.
+- Treat state as immutable; always create new objects/arrays.
 
 ### Event Handlers
-- ✅ Name handlers `handleXxx` or `onXxx` for clarity
-- ✅ Avoid inline arrow functions in JSX for lists (creates new function on every render)
-- ✅ For expensive callbacks, wrap in `useCallback` with proper dependencies
+
+- Use clear naming (`handleX` for internal, `onX` for props).
+- Avoid recreating handlers in large lists when it impacts performance.
+- Clean up listeners, timers, and async work on unmount.
+- Move complex logic out of JSX and into named functions.
 
 ## Common Pitfalls
 
-### ❌ State Management Mistakes
-```jsx
-// ❌ BAD: Direct mutation
-const [user, setUser] = useState({ name: 'John' });
-user.name = 'Jane'; // NEVER DO THIS
+### State and Data Flow
 
-// ✅ GOOD: Create new object
-setUser({ ...user, name: 'Jane' });
-// OR with functional update
-setUser(prev => ({ ...prev, name: 'Jane' }));
-```
+- Direct state mutation causes stale UI and hard-to-debug bugs.
+- Storing derived values in state creates sync issues.
+- Duplicating source-of-truth state increases bugs.
+- Using many unrelated state atoms can fragment logic.
 
-### ❌ Effect Dependencies
-```jsx
-// ❌ BAD: Missing dependencies (causes stale closures)
-useEffect(() => {
-  console.log(count); // Uses count
-}, []); // But doesn't list it
+### Effects and Dependencies
 
-// ✅ GOOD: Include all dependencies
-useEffect(() => {
-  console.log(count);
-}, [count]);
-```
+- Missing dependencies lead to stale closures.
+- Effects used for pure calculations add unnecessary complexity.
+- Side effects without cleanup cause memory leaks.
+- Running network requests without cancellation risks race conditions.
 
-### ❌ Keys in Lists
-```jsx
-// ❌ BAD: Index as key (causes bugs when items reorder/delete)
-{items.map((item, index) => <Item key={index} {...item} />)}
+### Lists and Rendering
 
-// ✅ GOOD: Use stable unique identifier
-{items.map(item => <Item key={item.id} {...item} />)}
-```
+- Index keys in dynamic lists can break item identity.
+- Random keys force full remounts and lose local state.
+- Heavy computations in render hurt responsiveness.
+- Rendering large lists without virtualization impacts performance.
 
-### ❌ Derived State
-```jsx
-// ❌ BAD: Storing derived state
-const [items, setItems] = useState([]);
-const [count, setCount] = useState(0);
-useEffect(() => setCount(items.length), [items]); // Unnecessary!
-
-// ✅ GOOD: Calculate during render
-const [items, setItems] = useState([]);
-const count = items.length; // Simple and correct
-```
-
-### ❌ Unnecessary useEffect
-```jsx
-// ❌ BAD: Effect for simple transformation
-const [firstName, setFirstName] = useState('');
-const [lastName, setLastName] = useState('');
-const [fullName, setFullName] = useState('');
-useEffect(() => {
-  setFullName(`${firstName} ${lastName}`);
-}, [firstName, lastName]);
-
-// ✅ GOOD: Calculate during render
-const fullName = `${firstName} ${lastName}`;
-```
+- Examples for these pitfalls: [Code Examples](./code-examples.md#state--effects)
 
 ## Performance Checklist
 
 ### When to Optimize
-- ⚠️ **Don't optimize prematurely** - measure first with React DevTools Profiler
-- ✅ Optimize when you have actual performance issues (slow renders, lag)
-- ✅ Optimize when passing callbacks to heavily re-rendered components
 
-### Quick Wins
-```jsx
-// ✅ Memoize expensive calculations
-const expensiveValue = useMemo(() => {
-  return computeExpensiveValue(input);
-}, [input]);
+- Measure first with React DevTools Profiler.
+- Prioritize user-perceived lag (typing, scrolling, navigation).
+- Optimize hot paths, not every component.
+- Prefer architectural fixes before micro-optimizations.
 
-// ✅ Memoize callbacks for child components
-const handleClick = useCallback(() => {
-  doSomething(id);
-}, [id]);
+### High-Impact Optimizations
 
-// ✅ Memoize components that rarely change
-const MemoizedChild = memo(ChildComponent);
+- Memoize expensive derived data when profiling confirms need.
+- Stabilize callback references when passing to memoized children.
+- Split large components and contexts by concern.
+- Lazy-load heavy routes/components with `lazy` and `Suspense`.
 
-// ✅ Split context to prevent unnecessary re-renders
-// BAD: Single context with all state
-// GOOD: Separate contexts for data and actions
-```
+### Re-render Triggers to Watch
 
-### Re-render Triggers
-A component re-renders when:
-1. **State changes** (via `useState`, `useReducer`)
-2. **Parent re-renders** (unless wrapped in `memo()`)
-3. **Context value changes** (any consumer re-renders)
-4. **Props change** (reference or value)
+- Local state updates.
+- Parent re-renders.
+- Context value changes.
+- Prop identity/value changes.
 
-### Avoid Re-renders
-- ✅ Move state down (closer to where it's used)
-- ✅ Lift content up (children as props pattern)
-- ✅ Use `memo()` for expensive pure components
-- ✅ Split large contexts into smaller ones
-- ✅ Use state management libraries for global state (Zustand, Redux)
+- Performance patterns: [Code Examples](./code-examples.md#performance)
 
 ## Security Essentials
 
-### XSS Prevention
-```jsx
-// ✅ SAFE: React escapes by default
-<div>{userInput}</div>
+### XSS and Content Safety
 
-// ❌ DANGEROUS: Bypasses escaping
-<div dangerouslySetInnerHTML={{ __html: userInput }} />
+- React escapes text by default when rendering values.
+- Treat raw HTML rendering as high risk.
+- Sanitize untrusted HTML before rendering.
+- Validate and sanitize user-provided URLs.
 
-// ✅ SAFE: Use sanitization library
-import DOMPurify from 'dompurify';
-<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
-```
+### General Security Rules
 
-### Other Security Rules
-- ❌ Never store sensitive data (tokens, passwords) in state or localStorage without encryption
-- ❌ Never trust user input - always validate and sanitize
-- ✅ Use HTTPS for all API requests
-- ✅ Implement proper CORS on backend
-- ✅ Use environment variables for API keys (never hardcode)
-- ✅ Sanitize URLs before using in `href` or `src`
-
-### Common Vulnerabilities
-```jsx
-// ❌ DANGEROUS: Unvalidated redirect
-window.location.href = userProvidedUrl;
-
-// ✅ SAFE: Validate against allowlist
-const allowedDomains = ['example.com', 'trusted.com'];
-const url = new URL(userProvidedUrl);
-if (allowedDomains.includes(url.hostname)) {
-  window.location.href = userProvidedUrl;
-}
-```
+- Never hardcode secrets in frontend code.
+- Use HTTPS for all API calls.
+- Validate user input client-side and server-side.
+- Keep auth/session logic on secure backend boundaries.
+- Avoid exposing sensitive data in logs or errors.
 
 ## Quick Decision Trees
 
 ### State Management: Which Tool?
-- **Component-local state** → `useState` / `useReducer`
-- **Shared between 2-3 components** → Lift state up / composition
-- **Shared across many components (same tree)** → Context API
-- **Complex global state** → Zustand / Redux Toolkit
-- **Server state (API data)** → TanStack Query / SWR
-- **Form state** → React Hook Form / Formik
-- **URL state** → React Router / Next.js router
 
-### When to Use Each Hook?
-- **`useState`** → Simple local state (strings, numbers, booleans, simple objects)
-- **`useReducer`** → Complex state with multiple related values or complex update logic
-- **`useEffect`** → Side effects (API calls, subscriptions, DOM manipulation)
-- **`useLayoutEffect`** → DOM measurements before paint (rare, use only when needed)
-- **`useMemo`** → Expensive calculations that slow down renders
-- **`useCallback`** → Prevent child re-renders when passing callbacks
-- **`useRef`** → DOM elements, mutable values that don't trigger re-renders
-- **`useContext`** → Access context values
-- **`useId`** → Generate unique IDs for accessibility
+- Simple local state: `useState`.
+- Complex local transitions: `useReducer`.
+- Shared tree state: Context split by concern.
+- Server state and caching: TanStack Query or SWR.
+- App-wide complex state: Zustand or Redux Toolkit.
+- URL-driven state: router state/query params.
 
-### Memoization: When to Use?
-```
-Should I use useMemo/useCallback/memo?
-│
-├─ Is it causing measured performance issues? → YES → Use it
-├─ Is it a dependency in useEffect/useMemo/useCallback? → YES → Use it
-├─ Is it preventing child re-renders? → YES → Use it
-└─ Otherwise → NO, don't use it (premature optimization)
-```
+### Which Hook?
+
+- `useState`: simple local values.
+- `useReducer`: multi-step/branching updates.
+- `useEffect`: external side effects.
+- `useMemo`: expensive derived computations.
+- `useCallback`: stable function references.
+- `useRef`: mutable instance value or DOM access.
+- `useId`: accessible unique IDs.
 
 ## React 18+ Features & Patterns
 
 ### Automatic Batching
-- ✅ React 18+ batches ALL state updates automatically (even in async functions)
-- ✅ No need for `unstable_batchedUpdates` anymore
-- ✅ Multiple `setState` calls in same function = single re-render
 
-### Transitions (useTransition)
-```jsx
-const [isPending, startTransition] = useTransition();
+- Multiple state updates in the same task are batched.
+- Reduced re-render count improves responsiveness.
 
-// Mark non-urgent updates as transitions
-startTransition(() => {
-  setSearchResults(filterLargeList(query)); // Non-urgent
-});
+### Transitions
 
-// Urgent updates happen immediately
-setQuery(e.target.value); // User typing - urgent
-```
+- Mark non-urgent updates with `startTransition`.
+- Keep input updates urgent for better typing UX.
+- Use `isPending` to communicate background work state.
 
-### Suspense for Data Fetching
-```jsx
-// ✅ Show fallback while data loads
-<Suspense fallback={<Spinner />}>
-  <UserProfile userId={id} />
-</Suspense>
+### Suspense
 
-// Works with lazy loading and data fetching libraries
-const LazyComponent = lazy(() => import('./Heavy'));
-```
+- Use fallback UIs for lazy-loaded views.
+- Keep fallback content minimal and meaningful.
+- Place boundaries near slower feature surfaces.
 
 ## React 19 Features
 
-### Actions & useActionState
-```jsx
-// ✅ NEW: Built-in form action handling with pending states
-import { useActionState } from 'react';
+### Forms and Async UX
 
-function AddToCart({ productId }) {
-  const [message, formAction, isPending] = useActionState(
-    async (previousState, formData) => {
-      const result = await addToCartAPI(productId, formData);
-      return result.message;
-    },
-    null // initial state
-  );
-  
-  return (
-    <form action={formAction}>
-      <input name="quantity" type="number" defaultValue="1" />
-      <button type="submit" disabled={isPending}>
-        {isPending ? 'Adding...' : 'Add to Cart'}
-      </button>
-      {message && <p>{message}</p>}
-    </form>
-  );
-}
+- `useActionState` helps model action + pending + result flow.
+- `useFormStatus` exposes submit/pending state from form context.
+- `useOptimistic` supports optimistic UI while async work runs.
 
-// ✅ Works with Server Actions in Next.js
-'use server';
-export async function createUser(prevState, formData) {
-  // Server-side logic
-  return { success: true };
-}
-```
+- React 19 action example: [Code Examples](./code-examples.md#forms--api)
 
-### useFormStatus
-```jsx
-// ✅ NEW: Access form status without Context
-import { useFormStatus } from 'react-dom';
+### Data and Component Patterns
 
-function SubmitButton() {
-  const { pending, data, method, action } = useFormStatus();
-  
-  return (
-    <button type="submit" disabled={pending}>
-      {pending ? 'Submitting...' : 'Submit'}
-    </button>
-  );
-}
+- `use()` can simplify promise/context consumption in supported environments.
+- Passing `ref` as a prop reduces `forwardRef` boilerplate.
+- Ref cleanup callbacks improve lifecycle cleanup ergonomics.
+- Improved metadata patterns help coordinate document head updates.
 
-function MyForm() {
-  return (
-    <form action={handleSubmit}>
-      <input name="email" />
-      <SubmitButton /> {/* Automatically knows form state */}
-    </form>
-  );
-}
-```
-
-### useOptimistic
-```jsx
-// ✅ NEW: Optimistic UI updates built-in
-import { useOptimistic } from 'react';
-
-function TodoList({ todos }) {
-  const [optimisticTodos, addOptimisticTodo] = useOptimistic(
-    todos,
-    (state, newTodo) => [...state, { ...newTodo, pending: true }]
-  );
-  
-  async function handleAdd(formData) {
-    const newTodo = { id: Date.now(), text: formData.get('text') };
-    
-    // Show optimistic update immediately
-    addOptimisticTodo(newTodo);
-    
-    // Then do the actual API call
-    await createTodo(newTodo);
-  }
-  
-  return (
-    <>
-      {optimisticTodos.map(todo => (
-        <div key={todo.id} style={{ opacity: todo.pending ? 0.5 : 1 }}>
-          {todo.text}
-        </div>
-      ))}
-      <form action={handleAdd}>
-        <input name="text" />
-        <button>Add</button>
-      </form>
-    </>
-  );
-}
-```
-
-### use() Hook
-```jsx
-// ✅ NEW: Read promises and context directly in render
-import { use } from 'react';
-
-// Read promises
-function UserProfile({ userPromise }) {
-  const user = use(userPromise); // Suspends until resolved
-  return <div>{user.name}</div>;
-}
-
-// Read context (alternative to useContext)
-function MyComponent() {
-  const theme = use(ThemeContext);
-  return <div style={{ color: theme.primary }}>Content</div>;
-}
-
-// ✅ Can be used conditionally (unlike hooks!)
-function Comments({ commentsPromise }) {
-  const [showComments, setShowComments] = useState(false);
-  
-  return (
-    <>
-      <button onClick={() => setShowComments(true)}>Show Comments</button>
-      {showComments && (
-        <Suspense fallback={<Loading />}>
-          <CommentList commentsPromise={commentsPromise} />
-        </Suspense>
-      )}
-    </>
-  );
-}
-
-function CommentList({ commentsPromise }) {
-  // ✅ This is allowed! use() can be conditional
-  const comments = use(commentsPromise);
-  return comments.map(c => <Comment key={c.id} {...c} />);
-}
-```
-
-### ref as Prop (No More forwardRef!)
-```jsx
-// ❌ OLD: React 18 - Need forwardRef
-const Input = forwardRef((props, ref) => {
-  return <input ref={ref} {...props} />;
-});
-
-// ✅ NEW: React 19 - ref is just a regular prop!
-function Input({ ref, ...props }) {
-  return <input ref={ref} {...props} />;
-}
-
-// Usage is the same
-function Form() {
-  const inputRef = useRef(null);
-  return <Input ref={inputRef} />;
-}
-```
-
-### Ref Cleanup Functions
-```jsx
-// ✅ NEW: Refs can return cleanup functions
-function VideoPlayer({ src }) {
-  return (
-    <video
-      ref={(node) => {
-        if (node) {
-          node.play();
-          // Return cleanup function
-          return () => {
-            node.pause();
-          };
-        }
-      }}
-      src={src}
-    />
-  );
-}
-
-// Works with useRef too
-useEffect(() => {
-  const video = videoRef.current;
-  if (video) {
-    video.play();
-  }
-}, []);
-
-// Now you can do this in the ref itself!
-<video
-  ref={(node) => {
-    node?.play();
-    return () => node?.pause();
-  }}
-/>
-```
-
-### Document Metadata
-```jsx
-// ✅ NEW: Use <title> and <meta> directly in components
-function BlogPost({ post }) {
-  return (
-    <article>
-      <title>{post.title} - My Blog</title>
-      <meta name="description" content={post.excerpt} />
-      <meta property="og:image" content={post.image} />
-      
-      <h1>{post.title}</h1>
-      <p>{post.content}</p>
-    </article>
-  );
-}
-
-// React automatically hoists these to <head>
-// No need for react-helmet or Next.js Head component!
-
-// ✅ Priority: Last rendered wins
-function App() {
-  return (
-    <>
-      <title>Default Title</title>
-      <Dashboard /> {/* If Dashboard has <title>, it overrides */}
-    </>
-  );
-}
-```
-
-### Context API Improvements
-```jsx
-// ✅ NEW: Context as a prop (with use hook)
-import { use } from 'react';
-
-// Can now pass context as prop
-function Child({ context }) {
-  const value = use(context);
-  return <div>{value}</div>;
-}
-
-function Parent() {
-  return <Child context={MyContext} />;
-}
-```
+- For implementation examples, use [Code Examples](./code-examples.md).
 
 ## Error Handling Essentials
 
-### Error Boundaries (Class Component - React 18)
-```jsx
-class ErrorBoundary extends React.Component {
-  state = { hasError: false };
+### Error Boundary Strategy
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
+- Use boundaries around risky UI zones, not only app root.
+- Show fallback UIs that preserve key navigation paths.
+- Log boundary-caught errors to monitoring systems.
+- Keep boundary fallbacks actionable and user-friendly.
 
-  componentDidCatch(error, errorInfo) {
-    logErrorToService(error, errorInfo);
-  }
+### What Boundaries Don’t Catch
 
-  render() {
-    if (this.state.hasError) {
-      return <h1>Something went wrong.</h1>;
-    }
-    return this.props.children;
-  }
-}
+- Event handler errors.
+- Async callback errors.
+- Server-side rendering errors.
+- Errors thrown inside the boundary itself.
 
-// Usage: Wrap risky components
-<ErrorBoundary>
-  <MyComponent />
-</ErrorBoundary>
-```
+### Practical Handling Rules
 
-### What Error Boundaries DON'T Catch
-- ❌ Event handlers (use try-catch instead)
-- ❌ Async code (setTimeout, promises)
-- ❌ Server-side rendering
-- ❌ Errors in the error boundary itself
+- Wrap async event logic with explicit try/catch.
+- Normalize error objects before showing messages.
+- Avoid exposing raw backend error details to users.
 
-### Event Handler Errors
-```jsx
-// ✅ Use try-catch for event handlers
-async function handleSubmit() {
-  try {
-    await submitForm(data);
-  } catch (error) {
-    setError(error.message);
-    logError(error);
-  }
-}
-```
+- Error handling snippets: [Code Examples](./code-examples.md#error-handling--rendering)
 
 ## Conditional Rendering Patterns
 
-```jsx
-// ✅ Short-circuit (most common)
-{isVisible && <Component />}
+- Prefer early returns for loading/error/empty branches.
+- Keep branch logic shallow and readable.
+- Extract complex conditions into named booleans.
+- Return `null` intentionally when rendering nothing.
 
-// ✅ Ternary (for if-else)
-{isLoggedIn ? <Dashboard /> : <Login />}
-
-// ✅ Early return (cleaner for complex conditions)
-if (!user) return <Loading />;
-if (error) return <Error />;
-return <Dashboard user={user} />;
-
-// ❌ AVOID: Falsy values rendering (0, NaN, "")
-{items.length && <List items={items} />} // Renders "0" if empty!
-
-// ✅ CORRECT: Be explicit with booleans
-{items.length > 0 && <List items={items} />}
-{Boolean(items.length) && <List items={items} />}
-```
+- Conditional rendering snippet: [Code Examples](./code-examples.md#early-return-conditional-rendering)
 
 ## Fragment Best Practices
 
-```jsx
-// ✅ Short syntax (when no key needed)
-<>
-  <Header />
-  <Main />
-</>
-
-// ✅ Full syntax (when you need key prop)
-<Fragment key={item.id}>
-  <dt>{item.term}</dt>
-  <dd>{item.description}</dd>
-</Fragment>
-
-// ✅ Fragments don't create extra DOM nodes
-return (
-  <>
-    <h1>Title</h1>
-    <p>Content</p>
-  </>
-);
-// Renders: <h1> and <p> as siblings, no wrapper div
-```
+- Use fragments to avoid unnecessary wrapper elements.
+- Use keyed fragments when rendering multiple siblings in lists.
+- Prefer semantic HTML over extra structural wrappers.
 
 ## Accessibility Quick Wins
 
-```jsx
-// ✅ Semantic HTML
-<button> not <div onClick={}>
-<nav>, <main>, <aside>, <header>, <footer>
+- Use semantic elements before adding ARIA.
+- Always associate labels with form controls.
+- Ensure keyboard access for all interactive controls.
+- Maintain visible focus indicators.
+- Test color contrast in all themes/states.
 
-// ✅ ARIA labels for screen readers
-<button aria-label="Close dialog">×</button>
-<img src="..." alt="Description" />
-
-// ✅ Keyboard navigation
-onKeyDown={(e) => e.key === 'Enter' && handleClick()}
-tabIndex={0} // Make focusable
-
-// ✅ Focus management
-useEffect(() => {
-  dialogRef.current?.focus();
-}, [isOpen]);
-
-// ✅ Use useId for unique IDs
-const id = useId();
-<label htmlFor={id}>Name</label>
-<input id={id} />
-```
+- Practical A11y examples: [Code Examples](./code-examples.md#accessibility--typescript)
 
 ## Critical Accessibility Principles (Must-Dos)
 
-These are the non-negotiable accessibility practices that have the biggest impact:
+### Forms
 
-1. **Semantic HTML is Everything**
-   - Use `<button>` not `<div role="button">`
-   - Use `<nav>`, `<main>`, `<article>`, `<section>` instead of generic divs
-   - Use `<label>` with `htmlFor` for form inputs (not placeholder-only)
-   - Semantic elements provide context to assistive technologies automatically
+- Label every input with visible, meaningful text.
+- Expose validation state with `aria-invalid` and clear messages.
+- Link errors/help text using `aria-describedby` when needed.
+- Do not rely on color alone for error communication.
 
-2. **Keyboard Navigation Must Work**
-   - All interactive elements MUST be keyboard accessible
-   - Use natural tab order (don't rely on tabIndex unless necessary)
-   - Avoid `tabIndex > 0` (breaks natural tab flow)
-   - Test: Can you use the app with only a keyboard? If no, there's a problem.
+### Keyboard and Focus
 
-3. **Color is NOT the Only Way to Convey Information**
-   - ❌ "Error fields are red" - screen reader users don't know which field failed
-   - ✅ Add `aria-invalid="true"` and error text messages
-   - ✅ Use icons + text together, not icons alone for critical info
-   - ❌ "Click the blue button" - use `aria-label` instead
+- Preserve logical tab order.
+- Avoid keyboard traps.
+- Programmatically manage focus after major UI changes.
+- Keep interactive hit areas comfortably large.
 
-4. **Text Contrast Must Meet WCAG Standards**
-   - Minimum 4.5:1 for normal text (level AA)
-   - 3:1 for large text (18pt+)
-   - Use tools like WebAIM Contrast Checker to verify
+### ARIA Usage
 
-5. **Images Need Alt Text (or aria-label)**
-   - `<img src="..." alt="Clear, descriptive text">`
-   - For decorative images: `alt=""`
-   - Alt text should convey meaning, not just describe ("submit button" not "blue rectangle")
-
-6. **Form Error Handling Must Be Clear**
-   ```jsx
-   // ✅ CORRECT: Associate error with input
-   <label htmlFor="email">Email</label>
-   <input 
-     id="email" 
-     aria-invalid={!!errors.email}
-     aria-describedby={errors.email ? "email-error" : undefined}
-   />
-   {errors.email && <span id="email-error" role="alert">{errors.email}</span>}
-   ```
-
-7. **Always Provide alt Text or aria-label**
-   - Logos, images, icons need description
-   - `aria-label="Close dialog"` for icon buttons
-   - Screen readers must understand what everything does
-
-8. **Focus Indicators Must Visible**
-   - ❌ Never remove focus outlines without replacing them: `outline: none;` → BAD
-   - ✅ Custom focus styles: `input:focus { outline: 2px solid #0066cc; }`
-   - Minimum 2px visible indicator with sufficient contrast
-
-9. **Announce Dynamic Changes (aria-live)**
-   ```jsx
-   // ✅ Assistive tech announces this when it updates
-   <div aria-live="polite" aria-atomic="true">
-     {notification}
-   </div>
-   ```
-
-10. **Test With Real Assistive Tech**
-    - Don't just check accessibility audit tools
-    - Test with screen readers (NVDA, JAWS, VoiceOver)
-    - Keyboard-only testing (can you use everything without a mouse?)
-
-### Essential ARIA Attributes
-
-```jsx
-// ✅ aria-label: Provides accessible name when no text content exists
-<button aria-label="Close dialog">×</button>
-<button aria-label="Open menu">≡</button>
-
-// ✅ aria-labelledby: Links to another element that labels this one
-<h2 id="dialog-title">Confirm Action</h2>
-<div role="dialog" aria-labelledby="dialog-title">
-  Are you sure?
-</div>
-
-// ✅ aria-describedby: Provides longer description
-<input 
-  aria-describedby="password-hint" 
-  type="password" 
-/>
-<span id="password-hint">Min 8 chars, 1 uppercase, 1 number</span>
-
-// ✅ aria-invalid: Indicates validation errors
-<input aria-invalid={!!error} aria-describedby="error-msg" />
-{error && <span id="error-msg" role="alert">{error}</span>}
-
-// ✅ aria-hidden: Hide from screen readers (ONLY use when needed)
-<span aria-hidden="true">→</span> {/* Decorative arrow */}
-<div aria-hidden="true">Decorative divider</div>
-
-// ✅ aria-disabled: Mark something as disabled (when native disabled won't work)
-<div aria-disabled="true" role="button">Disabled Action</div>
-
-// ✅ aria-expanded: Show if collapsible content is open/closed
-<button aria-expanded={isOpen} aria-controls="menu-items">
-  Menu
-</button>
-<ul id="menu-items" hidden={!isOpen}>
-  <li>Item 1</li>
-</ul>
-
-// ✅ aria-checked: For custom checkboxes/switches
-<div 
-  role="checkbox" 
-  aria-checked={isChecked}
-  onClick={toggleCheck}
-/>Remember me</div>
-
-// ✅ aria-pressed: For buttons that toggle state
-<button aria-pressed={isMuted} onClick={toggleMute}>
-  🔊 Mute
-</button>
-
-// ✅ aria-selected: For tabs, listbox items
-<div role="tab" aria-selected={isActive} aria-controls="tab-panel">
-  Profile
-</div>
-<div id="tab-panel" role="tabpanel" hidden={!isActive}>
-  Content
-</div>
-
-// ✅ aria-live: Announce dynamic updates (polite/assertive/off)
-<div aria-live="polite" aria-atomic="true">
-  {notification}
-</div>
-
-// ✅ aria-busy: Indicate loading state
-<div aria-busy={isLoading} aria-label="Loading data...">
-  {isLoading ? <Spinner /> : <Content />}
-</div>
-
-// ✅ aria-controls: Link button to what it controls
-<button aria-controls="mobile-menu" onClick={toggleMenu}>
-  ☰ Menu
-</button>
-<nav id="mobile-menu" hidden={!isOpen}>
-  Navigation items
-</nav>
-```
-
-**ARIA Attribute Priority:**
-- 🔴 **Critical**: `aria-label`, `aria-labelledby`, `aria-describedby`, `aria-invalid`, `aria-hidden`
-- 🟡 **Important**: `aria-expanded`, `aria-pressed`, `aria-selected`, `aria-checked`, `aria-disabled`
-- 🟢 **Useful**: `aria-live`, `aria-atomic`, `aria-busy`, `aria-controls`
-
-**Golden Rule: Prefer semantic HTML over ARIA**
-```jsx
-// ❌ DON'T: Use ARIA to fix bad HTML
-<div role="button" aria-label="Submit">Submit</div>
-
-// ✅ DO: Use semantic HTML first
-<button>Submit</button>
-
-// ✅ ARIA is for enhancing, not replacing
-<button aria-label="Close">×</button> {/* Icon button needs label */}
-```
+- Use ARIA only when native semantics are insufficient.
+- Keep ARIA attributes synchronized with UI state.
+- Avoid redundant or conflicting ARIA annotations.
 
 ## Form Handling Best Practices
 
-```jsx
-// ✅ Controlled components (React manages state)
-function ControlledForm() {
-  const [value, setValue] = useState('');
-  
-  return (
-    <input 
-      value={value} 
-      onChange={(e) => setValue(e.target.value)} 
-    />
-  );
-}
+- Keep submit state explicit (`idle/loading/success/error`).
+- Disable submit during in-flight operations when appropriate.
+- Validate inputs before request dispatch.
+- Keep server-side validation as the source of truth.
+- Use consistent error and success messaging patterns.
 
-// ✅ Uncontrolled components (DOM manages state)
-function UncontrolledForm() {
-  const inputRef = useRef<HTMLInputElement>(null);
-  
-  const handleSubmit = () => {
-    console.log(inputRef.current?.value);
-  };
-  
-  return <input ref={inputRef} defaultValue="Initial" />;
-}
-
-// ✅ For complex forms, use React Hook Form or Formik
-import { useForm } from 'react-hook-form';
-
-function MyForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm();
-  
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <input {...register('email', { required: true })} />
-      {errors.email && <span>Required</span>}
-    </form>
-  );
-}
-```
+- Form snippets: [Code Examples](./code-examples.md#forms--api)
 
 ## API/Fetch Patterns
 
-```jsx
-// ❌ BAD: Fetch in useEffect without cleanup
-useEffect(() => {
-  fetch('/api/data').then(res => res.json()).then(setData);
-}, []);
-
-// ✅ GOOD: Handle cleanup and errors
-useEffect(() => {
-  let ignore = false;
-  
-  async function fetchData() {
-    try {
-      const response = await fetch('/api/data');
-      const json = await response.json();
-      if (!ignore) {
-        setData(json);
-      }
-    } catch (error) {
-      if (!ignore) {
-        setError(error);
-      }
-    }
-  }
-  
-  fetchData();
-  return () => { ignore = true; }; // Cleanup
-}, []);
-
-// ✅ BEST: Use TanStack Query or SWR for data fetching
-import { useQuery } from '@tanstack/react-query';
-
-function Users() {
-  const { data, error, isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => fetch('/api/users').then(r => r.json())
-  });
-  
-  if (isLoading) return <Loading />;
-  if (error) return <Error />;
-  return <UserList users={data} />;
-}
-```
+- Centralize request helpers for consistent headers and error handling.
+- Handle cancellation for stale/unmounted requests.
+- Treat non-2xx responses as explicit error states.
+- Separate transport errors from domain/business errors.
+- Keep retries/backoff policy explicit and bounded.
 
 ## React.StrictMode (Development Tool)
 
-```jsx
-// ✅ Always wrap your app in StrictMode during development
-import { StrictMode } from 'react';
-
-root.render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
-
-// What it does:
-// - Highlights potential problems
-// - Double-invokes components/effects to catch bugs
-// - Warns about deprecated APIs
-// - Only runs in development (removed in production build)
-```
+- Use StrictMode in development to surface unsafe side effects.
+- Expect additional development-only checks and re-invocations.
+- Verify effects are idempotent and cleanup-safe.
 
 ## Event Handling Gotchas
 
-```jsx
-// ❌ BAD: Creating new function on every render
-<button onClick={() => handleClick(id)}>Click</button>
-
-// ✅ GOOD: Use useCallback for optimization
-const handleClick = useCallback(() => {
-  doSomething(id);
-}, [id]);
-<button onClick={handleClick}>Click</button>
-
-// ✅ ALSO GOOD: For simple cases, inline is fine
-<button onClick={() => setCount(count + 1)}>+</button>
-
-// ⚠️ Synthetic Events: Event pooling removed in React 17+
-// You can now safely use events in async code
-async function handleClick(e) {
-  e.preventDefault(); // Works fine now
-  await submitForm();
-  console.log(e.target); // Also works
-}
-```
+- Do not call handlers during render; pass function references.
+- Avoid expensive sync work directly in handlers.
+- Debounce/throttle noisy events where needed.
+- Keep handler side effects predictable and isolated.
 
 ## Children Patterns
 
-**Use children as dynamic blocks to avoid prop explosion:**
-
-```jsx
-// ❌ Too many props
-<Card title="Title" body="..." footer="..." actions={...} />
-
-// ✅ Use children as a dynamic block
-<Card title="Title">
-  <p>Body content</p>
-  <Actions />
-</Card>
-```
-
-```jsx
-// ✅ Children as function (render props)
-<DataProvider>
-  {(data) => <Display data={data} />}
-</DataProvider>
-
-// ✅ Children type checking
-interface Props {
-  children: React.ReactNode; // Any valid JSX
-  // OR more specific:
-  children: React.ReactElement; // Single React element
-  children: React.ReactElement[]; // Array of elements
-  children: string; // Text only
-}
-
-// ✅ Manipulating children
-import { Children, cloneElement } from 'react';
-
-function List({ children }) {
-  return Children.map(children, (child, index) => 
-    cloneElement(child, { index })
-  );
-}
-```
-
-**Related patterns to avoid blowing up props:**
-
-```jsx
-// ✅ Smart/Dumb (Container/Presentational)
-function UsersContainer() {
-  const [users, setUsers] = useState([]);
-  return <UsersList users={users} onDelete={(id) => setUsers(u => u.filter(x => x.id !== id))} />;
-}
-
-function UsersList({ users, onDelete }) {
-  return users.map(user => <UserRow key={user.id} user={user} onDelete={onDelete} />);
-}
-```
-
-```jsx
-// ✅ Compound components (shared state via context)
-<Tabs defaultValue="profile">
-  <Tabs.List>
-    <Tabs.Tab value="profile">Profile</Tabs.Tab>
-    <Tabs.Tab value="settings">Settings</Tabs.Tab>
-  </Tabs.List>
-  <Tabs.Panels>
-    <Tabs.Panel value="profile">...</Tabs.Panel>
-    <Tabs.Panel value="settings">...</Tabs.Panel>
-  </Tabs.Panels>
-</Tabs>
-```
+- Use `children` for layout/wrapper composition.
+- Prefer render props when children need dynamic data.
+- Use compound components for tightly related UI pieces.
+- Keep composition APIs consistent across component families.
 
 ## TypeScript Best Practices
 
-```jsx
-// ✅ Component types
-const MyComponent: React.FC<Props> = ({ children }) => { ... };
-// OR (preferred - more flexible)
-function MyComponent({ children }: Props) { ... }
+- Type component props explicitly and narrowly.
+- Prefer discriminated unions for variant-driven components.
+- Avoid broad `any`; use `unknown` + refinement when needed.
+- Keep shared domain types centralized and reusable.
+- Type async results and error shapes consistently.
 
-// ✅ Event types
-const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { ... };
-const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => { ... };
-const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => { ... };
-
-// ✅ Ref types
-const inputRef = useRef<HTMLInputElement>(null);
-const divRef = useRef<HTMLDivElement>(null);
-
-// ✅ State with complex types
-interface User { name: string; age: number; }
-const [user, setUser] = useState<User | null>(null);
-
-// ✅ Generic components
-interface ListProps<T> {
-  items: T[];
-  renderItem: (item: T) => React.ReactNode;
-}
-
-function List<T>({ items, renderItem }: ListProps<T>) {
-  return <>{items.map(renderItem)}</>;
-}
-```
+- TypeScript examples: [Code Examples](./code-examples.md#accessibility--typescript)
 
 ## Testing Quick Tips
 
-```jsx
-// ✅ Test user behavior, not implementation
-// Use @testing-library/react
+- Test behavior and outcomes, not implementation details.
+- Prefer user-centric queries and interactions.
+- Cover loading, error, empty, and success states.
+- Mock network boundaries, not internal React primitives.
+- Keep tests deterministic and independent.
 
-// ❌ BAD: Testing implementation details
-expect(component.state.count).toBe(1);
-
-// ✅ GOOD: Testing user-visible behavior
-expect(screen.getByText('Count: 1')).toBeInTheDocument();
-
-// ✅ Query priorities (most to least preferred)
-// 1. getByRole (accessible to everyone)
-// 2. getByLabelText (forms)
-// 3. getByPlaceholderText (fallback for forms)
-// 4. getByText (non-interactive elements)
-// 5. getByTestId (last resort)
-
-// ✅ Async testing
-await waitFor(() => {
-  expect(screen.getByText('Loaded')).toBeInTheDocument();
-});
-```
-
----
+- Add test fixture snippets in [Code Examples](./code-examples.md) if you want a dedicated testing section.
