@@ -60,6 +60,237 @@ return (
 );
 ```
 
+## Components & Composition
+
+### Good vs bad keys
+
+```jsx
+// ✅ Good: stable key from data
+users.map((user) => <UserCard key={user.id} user={user} />);
+
+// ❌ Avoid for dynamic lists
+users.map((user, index) => <UserCard key={index} user={user} />);
+```
+
+### Explicit props API + selective prop forwarding
+
+```tsx
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary";
+}
+
+function Button({
+  variant = "primary",
+  type = "button",
+  ...rest
+}: Readonly<ButtonProps>) {
+  return (
+    <button type={type} data-variant={variant} {...rest}>
+      {rest.children}
+    </button>
+  );
+}
+
+// User can pass any attribute (HTML props and custom props)
+<Button variant="primary" onClick={handleClick} disabled aria-label="Submit" />;
+```
+
+### Default props with function parameter defaults
+
+```tsx
+interface BadgeProps {
+  label: string;
+  tone?: "neutral" | "success" | "danger";
+  rounded?: boolean;
+}
+
+function Badge({
+  label,
+  tone = "neutral",
+  rounded = false,
+}: Readonly<BadgeProps>) {
+  return (
+    <span data-tone={tone} data-rounded={rounded}>
+      {label}
+    </span>
+  );
+}
+```
+
+### Grouped into logical props
+
+```jsx
+interface ButtonProps {
+  onClick: () => void;
+
+  // Appearance
+  appearance?: {
+    variant?: 'primary' | 'secondary';
+    size?: 'sm' | 'md' | 'lg';
+  };
+
+  // State
+  state?: {
+    disabled?: boolean;
+    loading?: boolean;
+  };
+
+  // Layout
+  fullWidth?: boolean;
+}
+```
+
+### Discriminated union props for variants
+
+```tsx
+type ActionButtonProps =
+  | { variant: "submit"; label: string; onClick: () => void }
+  | { variant: "link"; label: string; href: string }
+  | { variant: "icon"; icon: React.ReactNode; onClick: () => void };
+
+function ActionButton(props: Readonly<ActionButtonProps>) {
+  switch (props.variant) {
+    case "submit":
+      return <button onClick={props.onClick}>{props.label}</button>;
+    case "link":
+      return <a href={props.href}>{props.label}</a>;
+    case "icon":
+      return <button onClick={props.onClick}>{props.icon}</button>;
+  }
+}
+```
+
+### Children as structure, data as behavior
+
+```tsx
+interface CardProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+function Card({ title, children }: Readonly<CardProps>) {
+  return (
+    <section>
+      <h2>{title}</h2>
+      <div>{children}</div>
+    </section>
+  );
+}
+
+<Card title="Profile">
+  <ProfileDetails />
+</Card>;
+```
+
+### Compound components with shared context
+
+```jsx
+const MenuContext = createContext(null);
+
+function Menu({ children }) {
+  const [open, setOpen] = useState(false);
+  const toggle = () => setOpen((prev) => !prev);
+  return (
+    <MenuContext.Provider value={{ open, toggle }}>
+      {children}
+    </MenuContext.Provider>
+  );
+}
+
+function MenuButton({ children }) {
+  const { toggle } = useContext(MenuContext);
+  return <button onClick={toggle}>{children}</button>;
+}
+
+function MenuDropdown({ children }) {
+  const { open } = useContext(MenuContext);
+  return open ? <div>{children}</div> : null;
+}
+
+function MenuItem({ children }) {
+  return <div className="menu-item">{children}</div>;
+}
+
+// Dot Syntax (in explicit file = single import)
+// Attach sub-components using dot notation
+Menu.Button = MenuButton;
+Menu.Dropdown = MenuDropdown;
+Menu.Item = MenuItem;
+
+// Usage
+function App() {
+  const sports = ["Tennis", "Pickleball", "Racquetball", "Squash"];
+
+  return (
+    <Menu>
+      <Menu.Button>Sports</MenuButton>
+      <Menu.Dropdown>
+        {sports.map((sport) => (
+          <Menu.Item key={sport}>{sport}</MenuItem>
+        ))}
+      </MenuDropdown>
+    </Menu>
+  );
+}
+```
+
+### Smart/container + dumb/presentational split
+
+```tsx
+type User = { id: string; name: string; email: string };
+
+function UserListContainer() {
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data: User[]) => setUsers(data));
+  }, []);
+
+  const handleDelete = (id: string) => {
+    setUsers((prev) => prev.filter((user) => user.id !== id));
+  };
+
+  return <UserList users={users} onDelete={handleDelete} />;
+}
+
+function UserList({
+  users,
+  onDelete,
+}: {
+  users: User[];
+  onDelete: (id: string) => void;
+}) {
+  return users.map((user) => (
+    <button key={user.id} onClick={() => onDelete(user.id)}>
+      {user.name}
+    </button>
+  ));
+}
+```
+
+### Prop drilling vs composition vs context
+
+```jsx
+// Props (good for shallow trees)
+function Profile({ user }) {
+  return <UserName user={user} />;
+}
+
+// Composition (skip intermediates)
+function App({ user }) {
+  return <UserList>{user && <UserProfile user={user} />}</UserList>;
+}
+
+// Context (many distant consumers)
+const UserContext = createContext(null);
+function UserNameFromContext() {
+  const user = useContext(UserContext);
+  return <span>{user?.name}</span>;
+}
+```
+
 ## Forms & API
 
 ### Controlled form submit

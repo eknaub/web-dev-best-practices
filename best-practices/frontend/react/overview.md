@@ -19,6 +19,11 @@
   - [API/Fetch Patterns](#apifetch-patterns)
   - [React.StrictMode (Development Tool)](#reactstrictmode-development-tool)
   - [Event Handling Gotchas](#event-handling-gotchas)
+  - [Component Essentials (Daily)](#component-essentials-daily)
+  - [List Keys Essentials](#list-keys-essentials)
+  - [Props API Best Practices](#props-api-best-practices)
+  - [Composition Patterns](#composition-patterns)
+  - [Prop Drilling vs Composition vs Context](#prop-drilling-vs-composition-vs-context)
   - [Children Patterns](#children-patterns)
   - [TypeScript Best Practices](#typescript-best-practices)
   - [Testing Quick Tips](#testing-quick-tips)
@@ -278,6 +283,67 @@
 - Avoid expensive sync work directly in handlers.
 - Debounce/throttle noisy events where needed.
 - Keep handler side effects predictable and isolated.
+
+## Component Essentials
+
+- Keep components small and single-purpose; split when responsibilities diverge.
+- Prefer function components and colocate feature-specific files.
+- Keep component APIs explicit and discoverable; avoid hidden behavior.
+- Use one component per file by default, except tiny tightly-coupled pieces.
+- Avoid inline object/array literals in hot render paths when they cause re-renders.
+- Provide sensible defaults for optional props in function signatures.
+
+- Core component snippets: [Code Examples](./code-examples.md#components--composition)
+
+## List Keys Essentials
+
+- Every rendered list item needs a stable key.
+- Use persistent IDs from data (`id`, UUID), not generated values during render.
+- Avoid index keys for dynamic lists (reorder/add/remove) because identity breaks.
+- Index keys are acceptable only for fully static lists.
+- `key` is a React internals hint and is not available as a component prop.
+
+- List key snippets: [Code Examples](./code-examples.md#components--composition)
+
+## Props API Best Practices
+
+- Prefer passing objects as props instead of many primitive values.
+- Avoid a large amount of props (composition or similar can be used insteade)
+- Be explicit with props; avoid broad `any` and catch-all prop dictionaries.
+- Use prop spreading mainly to forward native DOM attributes intentionally.
+- Group related props into objects (appearance/state/layout) once APIs start growing.
+- Prefer discriminated unions for variant-driven components.
+- Use `Readonly<Props>` for immutable component contracts where appropriate.
+
+- Props snippets: [Code Examples](./code-examples.md#components--composition)
+
+## Composition Patterns
+
+- Use children for structural composition (wrappers/layout).
+- Use data props for behavior/configuration.
+- Combine children + data props for flexible component shells.
+- Use compound components for tightly related UI with shared state
+- Remember dot syntax can be used for compound components, when needed
+- Split smart container (fetch/state/effects) from dumb presentational (UI-only) components.
+
+- Composition snippets: [Code Examples](./code-examples.md#components--composition)
+
+## Prop Drilling vs Composition vs Context
+
+- Start with props for simple nearby parent-child data flow.
+- If data passes through unrelated intermediates, prefer composition.
+- Use Context when many distant components need the same cross-cutting state.
+- Avoid Context for frequently changing local state unless measured and scoped.
+- Rule of thumb: props first → composition second → Context when justified.
+
+- Data-flow snippets: [Code Examples](./code-examples.md#components--composition)
+
+### Decision Tree
+
+1. **Is the data needed by 1-2 adjacent components?** → Use **props**
+2. **Does data need to skip multiple intermediate components?** → Try **composition** first
+3. **Is data needed by many unrelated components?** → Use **Context** or **state management** (Redux, Zustand)
+4. **Does data change frequently?** → Consider **state management library** instead of Context
 
 ## Children Patterns
 
