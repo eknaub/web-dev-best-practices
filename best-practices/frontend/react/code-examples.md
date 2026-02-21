@@ -2,6 +2,47 @@
 
 Practical snippets that pair with [overview.md](./overview.md).
 
+## Navigation Index
+
+- [State & Effects](#state--effects)
+  - [Functional state updates](#functional-state-updates)
+  - [Avoid derived state in effects](#avoid-derived-state-in-effects)
+  - [Effect cleanup with AbortController](#effect-cleanup-with-abortcontroller)
+  - [Stable keys for list rendering](#stable-keys-for-list-rendering)
+- [Components & Composition](#components--composition)
+  - [Good vs bad keys](#good-vs-bad-keys)
+  - [Explicit props API + selective prop forwarding](#explicit-props-api--selective-prop-forwarding)
+  - [Default props with function parameter defaults](#default-props-with-function-parameter-defaults)
+  - [Grouped into logical props](#grouped-into-logical-props)
+  - [Discriminated union props for variants](#discriminated-union-props-for-variants)
+  - [Children as structure, data as behavior](#children-as-structure-data-as-behavior)
+  - [Compound components with shared context](#compound-components-with-shared-context)
+  - [Smart/container + dumb/presentational split](#smartcontainer--dumbpresentational-split)
+  - [Prop drilling vs composition vs context](#prop-drilling-vs-composition-vs-context)
+- [Forms & API](#forms--api)
+  - [Controlled form submit](#controlled-form-submit)
+  - [Request state pattern](#request-state-pattern)
+  - [React 19 form action with pending state](#react-19-form-action-with-pending-state)
+- [API/Fetch Patterns](#apifetch-patterns)
+  - [Centralized request helper](#centralized-request-helper)
+  - [Cancellation for stale requests](#cancellation-for-stale-requests)
+  - [Treat non-2xx as explicit errors](#treat-non-2xx-as-explicit-errors)
+  - [Transport vs domain errors](#transport-vs-domain-errors)
+  - [Bounded retry with backoff](#bounded-retry-with-backoff)
+- [Performance](#performance)
+  - [Memoize expensive derived values](#memoize-expensive-derived-values)
+  - [Stable callbacks for memoized children](#stable-callbacks-for-memoized-children)
+  - [Lazy-load heavy modules](#lazy-load-heavy-modules)
+- [Accessibility & TypeScript](#accessibility--typescript)
+  - [Label/input association and error messaging](#labelinput-association-and-error-messaging)
+  - [Typed props with explicit interfaces](#typed-props-with-explicit-interfaces)
+- [Error Handling & Rendering](#error-handling--rendering)
+  - [Error boundary for UI failures](#error-boundary-for-ui-failures)
+  - [Early-return conditional rendering](#early-return-conditional-rendering)
+  - [Safe async event handler with try/catch](#safe-async-event-handler-with-trycatch)
+
+---
+
 ## State & Effects
 
 ### Functional state updates
@@ -377,6 +418,153 @@ function CreateUserForm() {
       {state.message ? <p>{state.message}</p> : null}
     </form>
   );
+}
+```
+
+## API/Fetch Patterns
+
+### Centralized request helper
+
+```ts
+class ApiError extends Error {
+  status: number;
+  details?: unknown;
+
+  constructor(message: string, status: number, details?: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.details = details;
+  }
+}
+
+async function apiRequest<T>(
+  input: RequestInfo,
+  init: RequestInit = {},
+): Promise<T> {
+  const response = await fetch(input, {
+    headers: {
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+    ...init,
+  });
+
+  if (!response.ok) {
+    const details = await response.json().catch(() => null);
+    throw new ApiError("Request failed", response.status, details);
+  }
+
+  return response.json() as Promise<T>;
+}
+```
+
+### Cancellation for stale requests
+
+```tsx
+function ProductSearch({ query }: { query: string }) {
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setProducts([]);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    apiRequest<{ id: string; name: string }[]>(
+      `/api/products?query=${encodeURIComponent(query)}`,
+      { signal: controller.signal },
+    )
+      .then(setProducts)
+      .catch((error) => {
+        if ((error as Error).name !== "AbortError") {
+          console.error(error);
+        }
+      });
+
+    return () => controller.abort();
+  }, [query]);
+
+  return <ProductList items={products} />;
+}
+```
+
+### Treat non-2xx as explicit errors
+
+```ts
+async function getProfile() {
+  const response = await fetch("/api/profile");
+
+  if (!response.ok) {
+    throw new Error(`Profile request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+```
+
+### Transport vs domain errors
+
+```ts
+type ServiceResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; kind: "domain"; message: string };
+
+async function createOrder(payload: { items: string[] }) {
+  try {
+    const data = await apiRequest<{ orderId?: string; message?: string }>(
+      "/api/orders",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+
+    if (!data.orderId) {
+      return {
+        ok: false,
+        kind: "domain",
+        message: data.message ?? "Order could not be created",
+      } as ServiceResult<never>;
+    }
+
+    return { ok: true, data: { orderId: data.orderId } } as ServiceResult<{
+      orderId: string;
+    }>;
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error("Network error. Check your connection and try again.");
+    }
+    throw error;
+  }
+}
+```
+
+### Bounded retry with backoff
+
+```ts
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchWithRetry<T>(
+  input: RequestInfo,
+  init: RequestInit = {},
+  maxAttempts = 3,
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await apiRequest<T>(input, init);
+    } catch (error) {
+      const isLastAttempt = attempt === maxAttempts;
+      if (isLastAttempt) throw error;
+
+      const backoffMs = 300 * 2 ** (attempt - 1);
+      await sleep(backoffMs);
+    }
+  }
+
+  throw new Error("Unexpected retry flow");
 }
 ```
 

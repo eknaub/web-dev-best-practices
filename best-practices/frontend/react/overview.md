@@ -171,16 +171,12 @@
 - `useFormStatus` exposes submit/pending state from form context.
 - `useOptimistic` supports optimistic UI while async work runs.
 
-- React 19 action example: [Code Examples](./code-examples.md#forms--api)
-
 ### Data and Component Patterns
 
 - `use()` can simplify promise/context consumption in supported environments.
 - Passing `ref` as a prop reduces `forwardRef` boilerplate.
 - Ref cleanup callbacks improve lifecycle cleanup ergonomics.
 - Improved metadata patterns help coordinate document head updates.
-
-- For implementation examples, use [Code Examples](./code-examples.md).
 
 ## Error Handling Essentials
 
@@ -271,6 +267,8 @@
 - Separate transport errors from domain/business errors.
 - Keep retries/backoff policy explicit and bounded.
 
+- API Examples: [Code Examples](./code-examples.md#apifetch-patterns)
+
 ## React.StrictMode (Development Tool)
 
 - Use StrictMode in development to surface unsafe side effects.
@@ -336,7 +334,7 @@
 - Avoid Context for frequently changing local state unless measured and scoped.
 - Rule of thumb: props first → composition second → Context when justified.
 
-- Data-flow snippets: [Code Examples](./code-examples.md#components--composition)
+- Data-flow snippets: [Code Examples](./code-examples.md#prop-drilling-vs-composition-vs-context)
 
 ### Decision Tree
 
@@ -351,6 +349,8 @@
 - Prefer render props when children need dynamic data.
 - Use compound components for tightly related UI pieces.
 - Keep composition APIs consistent across component families.
+
+- Children examples: [Code Examples](./code-examples.md#children-as-structure-data-as-behavior)
 
 ## TypeScript Best Practices
 
@@ -369,5 +369,3 @@
 - Cover loading, error, empty, and success states.
 - Mock network boundaries, not internal React primitives.
 - Keep tests deterministic and independent.
-
-- Add test fixture snippets in [Code Examples](./code-examples.md) if you want a dedicated testing section.
