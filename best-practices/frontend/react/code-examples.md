@@ -160,7 +160,7 @@ function Badge({
 
 ### Grouped into logical props
 
-```jsx
+```tsx
 interface ButtonProps {
   onClick: () => void;
 
