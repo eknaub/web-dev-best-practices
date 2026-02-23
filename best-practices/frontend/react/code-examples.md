@@ -19,6 +19,10 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Compound components with shared context](#compound-components-with-shared-context)
   - [Smart/container + dumb/presentational split](#smartcontainer--dumbpresentational-split)
   - [Prop drilling vs composition vs context](#prop-drilling-vs-composition-vs-context)
+- [Headless component pattern](#headless-component-pattern)
+  - [Headless compound with context](#headless-compound-with-context)
+  - [Controlled/uncontrolled state hook](#controlleduncontrolled-state-hook)
+  - [Slot pattern for flexible rendering](#slot-pattern-for-flexible-rendering)
 - [Forms & API](#forms--api)
   - [Controlled form submit](#controlled-form-submit)
   - [Request state pattern](#request-state-pattern)
@@ -225,6 +229,8 @@ function Card({ title, children }: Readonly<CardProps>) {
 
 ### Compound components with shared context
 
+Info: The `Toggle` component from [Headless compound with context](./code-examples.md#headless-compound-with-context) can be used, if so the Menu does not need any Context or State.
+
 ```jsx
 const MenuContext = createContext(null);
 
@@ -264,12 +270,12 @@ function App() {
 
   return (
     <Menu>
-      <Menu.Button>Sports</MenuButton>
+      <Menu.Button>Sports</Menu.Button>
       <Menu.Dropdown>
         {sports.map((sport) => (
-          <Menu.Item key={sport}>{sport}</MenuItem>
+          <Menu.Item key={sport}>{sport}</Menu.Item>
         ))}
-      </MenuDropdown>
+      </Menu.Dropdown>
     </Menu>
   );
 }
@@ -330,6 +336,119 @@ function UserNameFromContext() {
   const user = useContext(UserContext);
   return <span>{user?.name}</span>;
 }
+```
+
+## Headless component pattern
+
+### Headless compound with context
+
+```tsx
+const ToggleContext = createContext();
+
+function Toggle({ children }) {
+  const [on, setOn] = useState(false);
+  function toggle() {
+    setOn((prevOn) => !prevOn);
+  }
+  return (
+    <ToggleContext.Provider value={{ on, toggle }}>
+      {children}
+    </ToggleContext.Provider>
+  );
+}
+
+function ToggleButton({ children }) {
+  const { toggle } = useContext(ToggleContext);
+  return <div onClick={toggle}>{children}</div>;
+}
+
+function ToggleOff({ children }) {
+  const { on } = useContext(ToggleContext);
+  return on ? null : children;
+}
+
+function ToggleOn({ children }) {
+  const { on } = useContext(ToggleContext);
+  return on ? children : null;
+}
+
+Toggle.Button = ToggleButton;
+Toggle.On = ToggleOn;
+Toggle.Off = ToggleOff;
+
+//usage
+function App() {
+  return (
+    <Toggle>
+      <Toggle.Button>
+        <Toggle.On>
+          <BsStarFill className="star filled" />
+        </Toggle.On>
+        <Toggle.Off>
+          <BsStar className="star" />
+        </Toggle.Off>
+      </Toggle.Button>
+    </Toggle>
+  );
+}
+```
+
+### Controlled/uncontrolled state hook
+
+```tsx
+type UseControllableStateParams<T> = {
+  value?: T;
+  defaultValue: T;
+  onChange?: (nextValue: T) => void;
+};
+
+function useControllableState<T>({
+  value,
+  defaultValue,
+  onChange,
+}: UseControllableStateParams<T>) {
+  const [internalValue, setInternalValue] = useState<T>(defaultValue);
+  const isControlled = value !== undefined;
+  const currentValue = isControlled ? (value as T) : internalValue;
+
+  const setValue = (nextValue: T) => {
+    if (!isControlled) setInternalValue(nextValue);
+    onChange?.(nextValue);
+  };
+
+  return [currentValue, setValue] as const;
+}
+```
+
+### Slot pattern for flexible rendering
+
+```tsx
+type CardProps = {
+  title: React.ReactNode;
+  media?: React.ReactNode;
+  actions?: React.ReactNode;
+  children: React.ReactNode;
+};
+
+function Card({ title, media, actions, children }: CardProps) {
+  return (
+    <article>
+      {media}
+      <h3>{title}</h3>
+      <div>{children}</div>
+      {actions ? <footer>{actions}</footer> : null}
+    </article>
+  );
+}
+
+// usage
+<Card
+  title="Pro plan"
+  media={<img alt="Plan preview" src="/preview.png" />}
+  actions={<button type="button">Upgrade</button>}
+>
+  Includes analytics, alerts, and team permissions.
+</Card>;
 ```
 
 ## Forms & API

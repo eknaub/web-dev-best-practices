@@ -14,15 +14,16 @@
   - [Conditional Rendering Patterns](#conditional-rendering-patterns)
   - [Fragment Best Practices](#fragment-best-practices)
   - [Accessibility Quick Wins](#accessibility-quick-wins)
-  - [Critical Accessibility Principles (Must-Dos)](#critical-accessibility-principles-must-dos)
+  - [Critical Accessibility Principles](#critical-accessibility-principles)
   - [Form Handling Best Practices](#form-handling-best-practices)
   - [API/Fetch Patterns](#apifetch-patterns)
   - [React.StrictMode (Development Tool)](#reactstrictmode-development-tool)
   - [Event Handling Gotchas](#event-handling-gotchas)
-  - [Component Essentials (Daily)](#component-essentials-daily)
+  - [Component Essentials](#component-essentials)
   - [List Keys Essentials](#list-keys-essentials)
   - [Props API Best Practices](#props-api-best-practices)
   - [Composition Patterns](#composition-patterns)
+  - [Headless Patterns](#headless-patterns)
   - [Prop Drilling vs Composition vs Context](#prop-drilling-vs-composition-vs-context)
   - [Children Patterns](#children-patterns)
   - [TypeScript Best Practices](#typescript-best-practices)
@@ -227,7 +228,7 @@
 
 - Practical A11y examples: [Code Examples](./code-examples.md#accessibility--typescript)
 
-## Critical Accessibility Principles (Must-Dos)
+## Critical Accessibility Principles
 
 ### Forms
 
@@ -321,10 +322,19 @@
 - Use data props for behavior/configuration.
 - Combine children + data props for flexible component shells.
 - Use compound components for tightly related UI with shared state
+- For unstyled behavior-first variants, check headless pattern first
 - Remember dot syntax can be used for compound components, when needed
 - Split smart container (fetch/state/effects) from dumb presentational (UI-only) components.
 
 - Composition snippets: [Code Examples](./code-examples.md#components--composition)
+
+## Headless Patterns
+
+- Use headless components when behavior/state should be reusable across different UIs.
+- Keep styling concerns outside the logic layer (`className`, render props, or slots).
+- Support controlled and uncontrolled modes for reusable inputs/toggles.
+
+- Headless component snippets: [Code Examples](./code-examples.md#headless-component-pattern)
 
 ## Prop Drilling vs Composition vs Context
 
