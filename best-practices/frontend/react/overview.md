@@ -142,7 +142,7 @@
 - `useEffect`: external side effects.
 - `useMemo`: expensive derived computations.
 - `useCallback`: stable function references.
-- `useRef`: mutable instance value or DOM access.
+- `useRef`: mutable instance value or DOM access. Example: [Code Examples](./code-examples.md#useref-for-dom-and-mutable-values)
 - `useId`: accessible unique IDs.
 
 ## React 18+ Features & Patterns

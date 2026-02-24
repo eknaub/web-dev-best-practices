@@ -9,6 +9,8 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Avoid derived state in effects](#avoid-derived-state-in-effects)
   - [Effect cleanup with AbortController](#effect-cleanup-with-abortcontroller)
   - [Stable keys for list rendering](#stable-keys-for-list-rendering)
+  - [useRef for DOM and mutable values](#useref-for-dom-and-mutable-values)
+  - [First render flag with custom hook](#first-render-flag-with-custom-hook-and-ref)
 - [Components & Composition](#components--composition)
   - [Good vs bad keys](#good-vs-bad-keys)
   - [Explicit props API + selective prop forwarding](#explicit-props-api--selective-prop-forwarding)
@@ -105,6 +107,54 @@ return (
 );
 ```
 
+### useRef for DOM and mutable values
+
+Note: `useRef` stores a mutable value in `ref.current`, and changing it does **not** notify React to re-render.
+React re-renders when state/props/context change, not when a ref value changes.
+If `renderCount` were tracked with `useState`, calling `setRenderCount` in an effect that runs after every render would schedule another render each time and create an infinite loop.
+
+```jsx
+function Main() {
+  const [on, setOn] = React.useState(false);
+  const renderCount = React.useRef(0);
+
+  function forceRender() {
+    setOn((prevOn) => !prevOn);
+  }
+
+  function incrementRenderCount() {
+    renderCount.current++;
+  }
+
+  React.useEffect(() => {
+    renderCount.current++;
+  });
+
+  return (
+    <>
+      <h3>Understanding refs</h3>
+      <button onClick={forceRender}>Force re-render w/ state change</button>
+      <button onClick={incrementRenderCount}>Increment Ref Count</button>
+      <h4>Render count: {renderCount.current}</h4>
+    </>
+  );
+}
+```
+
+### First render flag with custom hook and ref
+
+```jsx
+function useIsFirstRender() {
+  const isFirstRenderRef = React.useRef(true);
+
+  React.useEffect(() => {
+    isFirstRenderRef.current = false;
+  }, []);
+
+  return isFirstRenderRef.current;
+}
+```
+
 ## Components & Composition
 
 ### Good vs bad keys
@@ -170,8 +220,8 @@ interface ButtonProps {
 
   // Appearance
   appearance?: {
-    variant?: 'primary' | 'secondary';
-    size?: 'sm' | 'md' | 'lg';
+    variant?: "primary" | "secondary";
+    size?: "sm" | "md" | "lg";
   };
 
   // State
@@ -228,8 +278,6 @@ function Card({ title, children }: Readonly<CardProps>) {
 ```
 
 ### Compound components with shared context
-
-Info: The `Toggle` component from [Headless compound with context](./code-examples.md#headless-compound-with-context) can be used, if so the Menu does not need any Context or State.
 
 ```jsx
 const MenuContext = createContext(null);
