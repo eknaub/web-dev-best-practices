@@ -18,6 +18,7 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Grouped into logical props](#grouped-into-logical-props)
   - [Discriminated union props for variants](#discriminated-union-props-for-variants)
   - [Children as structure, data as behavior](#children-as-structure-data-as-behavior)
+  - [Render props](#render-props)
   - [Compound components with shared context](#compound-components-with-shared-context)
   - [Smart/container + dumb/presentational split](#smartcontainer--dumbpresentational-split)
   - [Prop drilling vs composition vs context](#prop-drilling-vs-composition-vs-context)
@@ -29,6 +30,8 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Controlled form submit](#controlled-form-submit)
   - [Request state pattern](#request-state-pattern)
   - [React 19 form action with pending state](#react-19-form-action-with-pending-state)
+- [Routing](#routing)
+  - [React Router basics](#react-router-basics)
 - [API/Fetch Patterns](#apifetch-patterns)
   - [Centralized request helper](#centralized-request-helper)
   - [Cancellation for stale requests](#cancellation-for-stale-requests)
@@ -275,6 +278,19 @@ function Card({ title, children }: Readonly<CardProps>) {
 <Card title="Profile">
   <ProfileDetails />
 </Card>;
+```
+
+### Render props
+
+Note: You can also use a regular function prop (for example, `render`) instead of function-as-children.
+
+```tsx
+function Toggle({ children }: { children: (on: boolean) => React.ReactNode }) {
+  const [on, setOn] = useState(false);
+  return <button onClick={() => setOn(!on)}>{children(on)}</button>;
+}
+
+<Toggle>{(on) => (on ? "On" : "Off")}</Toggle>;
 ```
 
 ### Compound components with shared context
@@ -584,6 +600,43 @@ function CreateUserForm() {
       </button>
       {state.message ? <p>{state.message}</p> : null}
     </form>
+  );
+}
+```
+
+## Routing
+
+### React Router basics
+
+```tsx
+import {
+  BrowserRouter,
+  Link,
+  NavLink,
+  Route,
+  Routes,
+  useParams,
+} from "react-router-dom";
+
+function ProductDetails() {
+  const { productId } = useParams<{ productId: string }>();
+  return <h2>Product: {productId}</h2>;
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <nav>
+        <NavLink to="/">Home</NavLink>
+        {" | "}
+        <Link to="/products/42">Product 42</Link>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<p>Home</p>} />
+        <Route path="/products/:productId" element={<ProductDetails />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 ```

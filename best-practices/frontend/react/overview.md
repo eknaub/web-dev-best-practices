@@ -17,6 +17,7 @@
   - [Critical Accessibility Principles](#critical-accessibility-principles)
   - [Form Handling Best Practices](#form-handling-best-practices)
   - [API/Fetch Patterns](#apifetch-patterns)
+  - [React Router Essentials](#react-router-essentials)
   - [React.StrictMode (Development Tool)](#reactstrictmode-development-tool)
   - [Event Handling Gotchas](#event-handling-gotchas)
   - [Component Essentials](#component-essentials)
@@ -269,6 +270,16 @@
 - Keep retries/backoff policy explicit and bounded.
 
 - API Examples: [Code Examples](./code-examples.md#apifetch-patterns)
+
+## React Router Essentials
+
+- Use nested routes + layout routes to share app chrome across pages.
+- Use `NavLink` for active-state navigation styling.
+- Read route params with `useParams` and URL query with `useSearchParams`.
+- Use loaders/actions (Data Router) when route-level data and mutations fit better than ad-hoc effects.
+- Prefer `useNavigate` for programmatic flows (post-submit redirects, auth guards).
+
+- Router snippet: [Code Examples](./code-examples.md#react-router-basics)
 
 ## React.StrictMode (Development Tool)
 
