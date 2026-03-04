@@ -38,6 +38,7 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Treat non-2xx as explicit errors](#treat-non-2xx-as-explicit-errors)
   - [Transport vs domain errors](#transport-vs-domain-errors)
   - [Bounded retry with backoff](#bounded-retry-with-backoff)
+  - [Mirage JS setup](#mirage-js-setup)
 - [Performance](#performance)
   - [Memoize expensive derived values](#memoize-expensive-derived-values)
   - [Stable callbacks for memoized children](#stable-callbacks-for-memoized-children)
@@ -785,6 +786,80 @@ async function fetchWithRetry<T>(
   }
 
   throw new Error("Unexpected retry flow");
+}
+```
+
+### Mirage JS setup
+
+```ts
+// src/mocks/server.ts
+import { createServer, Model, Response } from "miragejs";
+
+export function makeServer({ environment = "development" } = {}) {
+  return createServer({
+    environment,
+    models: {
+      user: Model,
+    },
+    seeds(server) {
+      server.create("user", { id: "1", name: "Ada" });
+      server.create("user", { id: "2", name: "Grace" });
+    },
+    routes() {
+      this.namespace = "api";
+
+      this.get("/users", (schema) => {
+        return schema.user.all();
+      });
+
+      this.get("/users/:id", (schema, request) => {
+        const user = schema.user.find(request.params.id);
+        if (!user) {
+          return new Response(404, {}, { message: "User not found" });
+        }
+        return user;
+      });
+    },
+  });
+}
+```
+
+```ts
+// src/main.tsx (or src/index.tsx)
+if (import.meta.env.DEV) {
+  const { makeServer } = await import("./mocks/server");
+  makeServer();
+}
+```
+
+```tsx
+// Example fetch usage with Mirage-backed endpoints
+import { useEffect, useState } from "react";
+
+type User = { id: string; name: string };
+
+function UsersPanel() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        // Mirage collection shape: { users: User[] }
+        setUsers(payload.users ?? []);
+      })
+      .catch((requestError) => {
+        setError((requestError as Error).message);
+      });
+  }, []);
+
+  if (error) return <p role="alert">{error}</p>;
+  return <pre>{JSON.stringify(users, null, 2)}</pre>;
 }
 ```
 

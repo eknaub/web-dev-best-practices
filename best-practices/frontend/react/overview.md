@@ -17,6 +17,7 @@
   - [Critical Accessibility Principles](#critical-accessibility-principles)
   - [Form Handling Best Practices](#form-handling-best-practices)
   - [API/Fetch Patterns](#apifetch-patterns)
+  - [Mirage JS Mock Server](#mirage-js-mock-server)
   - [React Router Essentials](#react-router-essentials)
   - [React.StrictMode (Development Tool)](#reactstrictmode-development-tool)
   - [Event Handling Gotchas](#event-handling-gotchas)
@@ -270,6 +271,16 @@
 - Keep retries/backoff policy explicit and bounded.
 
 - API Examples: [Code Examples](./code-examples.md#apifetch-patterns)
+
+## Mirage JS Mock Server
+
+- Use Mirage JS to mock backend APIs during frontend development.
+- Start Mirage only in development/test to avoid intercepting production traffic.
+- Keep route contracts aligned with real API shapes (status codes + response schema).
+- Seed realistic edge cases (empty lists, validation errors, latency).
+- Centralize mock server setup in one file (for example `src/mocks/server.ts`).
+
+- Mirage snippet: [Code Examples](./code-examples.md#mirage-js-setup)
 
 ## React Router Essentials
 
