@@ -285,6 +285,7 @@
 ## React Router Essentials
 
 - Use nested routes + layout routes to share app chrome across pages.
+- Render child routes with `Outlet` inside layout route components.
 - Use `NavLink` for active-state navigation styling.
 - Read route params with `useParams` and URL query with `useSearchParams`.
 - Use loaders/actions (Data Router) when route-level data and mutations fit better than ad-hoc effects.

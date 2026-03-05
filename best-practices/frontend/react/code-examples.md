@@ -614,10 +614,24 @@ import {
   BrowserRouter,
   Link,
   NavLink,
+  Outlet,
   Route,
   Routes,
   useParams,
 } from "react-router-dom";
+
+function AppLayout() {
+  return (
+    <>
+      <nav>
+        <NavLink to="/">Home</NavLink>
+        {" | "}
+        <Link to="/products/42">Product 42</Link>
+      </nav>
+      <Outlet />
+    </>
+  );
+}
 
 function ProductDetails() {
   const { productId } = useParams<{ productId: string }>();
@@ -627,15 +641,11 @@ function ProductDetails() {
 function App() {
   return (
     <BrowserRouter>
-      <nav>
-        <NavLink to="/">Home</NavLink>
-        {" | "}
-        <Link to="/products/42">Product 42</Link>
-      </nav>
-
       <Routes>
-        <Route path="/" element={<p>Home</p>} />
-        <Route path="/products/:productId" element={<ProductDetails />} />
+        <Route element={<AppLayout />}>
+          <Route index element={<p>Home</p>} />
+          <Route path="products/:productId" element={<ProductDetails />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
