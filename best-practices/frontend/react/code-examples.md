@@ -32,6 +32,7 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [React 19 form action with pending state](#react-19-form-action-with-pending-state)
 - [Routing](#routing)
   - [React Router basics](#react-router-basics)
+  - [useOutletContext for nested routes](#useoutletcontext-for-nested-routes)
 - [API/Fetch Patterns](#apifetch-patterns)
   - [Centralized request helper](#centralized-request-helper)
   - [Cancellation for stale requests](#cancellation-for-stale-requests)
@@ -645,6 +646,70 @@ function App() {
         <Route element={<AppLayout />}>
           <Route index element={<p>Home</p>} />
           <Route path="products/:productId" element={<ProductDetails />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+### useOutletContext for nested routes
+
+```tsx
+import {
+  BrowserRouter,
+  NavLink,
+  Outlet,
+  Route,
+  Routes,
+  useOutletContext,
+} from "react-router-dom";
+
+type DashboardContext = {
+  currentUserName: string;
+  canManageBilling: boolean;
+};
+
+function DashboardLayout() {
+  const contextValue: DashboardContext = {
+    currentUserName: "Ada",
+    canManageBilling: true,
+  };
+
+  return (
+    <>
+      <nav>
+        <NavLink to="/dashboard">Overview</NavLink>
+        {" | "}
+        <NavLink to="/dashboard/billing">Billing</NavLink>
+      </nav>
+      <Outlet context={contextValue} />
+    </>
+  );
+}
+
+function DashboardOverview() {
+  const { currentUserName } = useOutletContext<DashboardContext>();
+  return <h2>Welcome back, {currentUserName}</h2>;
+}
+
+function BillingPage() {
+  const { canManageBilling } = useOutletContext<DashboardContext>();
+
+  return canManageBilling ? (
+    <button type="button">Open billing portal</button>
+  ) : (
+    <p>You do not have billing access.</p>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardOverview />} />
+          <Route path="billing" element={<BillingPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
