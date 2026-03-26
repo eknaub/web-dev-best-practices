@@ -4,6 +4,7 @@
 
 - [Quick Reference](#quick-reference)
   - [Golden Rules](#golden-rules)
+  - [SOLID Principles](#solid-principles)
   - [Common Pitfalls](#common-pitfalls)
   - [Performance Checklist](#performance-checklist)
   - [Security Essentials](#security-essentials)
@@ -30,6 +31,7 @@
   - [Children Patterns](#children-patterns)
   - [TypeScript Best Practices](#typescript-best-practices)
   - [Testing Quick Tips](#testing-quick-tips)
+  - [Happy Path and Sad Path](#happy-path-and-sad-path)
 
 ---
 
@@ -58,6 +60,50 @@
 - Avoid recreating handlers in large lists when it impacts performance.
 - Clean up listeners, timers, and async work on unmount.
 - Move complex logic out of JSX and into named functions.
+
+## SOLID Principles
+
+### Single Responsibility Principle (SRP)
+
+> "There should never be more than one reason for a class to change." – Robert C. Martin
+
+- Keep each component/hook focused on one responsibility.
+- Split stateful/data logic from presentational rendering when complexity grows.
+- Example snippets: [SRP Example](./code-examples.md#single-responsibility-srp)
+
+### Open/Closed Principle (OCP)
+
+> "Modules should be both open (for extension) and closed (for modification)." – Bertrand Meyer
+
+- Prefer extension through composition (`children`, slots, wrappers) over modifying internals.
+- Build reusable base components and extend them in feature components.
+- Example snippets: [OCP Example](./code-examples.md#openclosed-ocp)
+
+### Liskov Substitution Principle (LSP)
+
+> "Let q(x) be a property provable about objects x of type T. Then q(y) should be true for objects y of type S where S is a subtype of T." – Barbara H. Liskov
+
+- Specialized components should preserve base component behavior expectations.
+- If a component wraps a native element, keep its core contract intact (props/events/accessibility).
+- Example snippets: [LSP Example](./code-examples.md#liskov-substitution-lsp)
+
+### Interface Segregation Principle (ISP)
+
+> "Clients should not be forced to depend upon interfaces that they do not use." – Robert C. Martin
+
+- Avoid oversized prop APIs; split interfaces by role and concern.
+- Keep component contracts narrow, explicit, and easy to understand.
+- Example snippets: [ISP Example](./code-examples.md#interface-segregation-isp)
+
+### Dependency Inversion Principle (DIP)
+
+> "A. High-level modules should not depend on low level modules. Both should depend on abstractions. B. Abstractions should not depend upon details. Details should depend upon abstractions." – Robert C. Martin
+
+- Depend on abstractions (interfaces/contracts), not concrete implementations.
+- Inject dependencies (API clients/services) to improve testability and reuse.
+- Example snippets: [DIP Example](./code-examples.md#dependency-inversion-dip)
+
+- Full SOLID code set: [SOLID Principles](./code-examples.md#solid-principles)
 
 ## Common Pitfalls
 
@@ -288,6 +334,7 @@
 - Render child routes with `Outlet` inside layout route components.
 - Use `useOutletContext` to pass typed layout-level data to nested route components.
 - Use `NavLink` for active-state navigation styling.
+- With `NavLink`, use relative `to` values: `.` for current route and `..` for parent route.
 - Read route params with `useParams` and URL query with `useSearchParams`.
 - Use loaders/actions (Data Router) when route-level data and mutations fit better than ad-hoc effects.
 - Prefer `useNavigate` for programmatic flows (post-submit redirects, auth guards).
@@ -403,3 +450,21 @@
 - Cover loading, error, empty, and success states.
 - Mock network boundaries, not internal React primitives.
 - Keep tests deterministic and independent.
+
+## Happy Path and Sad Path
+
+- Always document and test the happy path first (expected input, expected flow, expected UI result).
+- Include a short sad path list for common failures (validation errors, network failures, empty states, permission/auth issues).
+- In overview docs, keep sad path coverage concise (top 3-5 scenarios), then link to deeper docs if needed.
+- For tests, ensure each core feature has at least one happy path test and one sad path test.
+
+### Example: Login Flow
+
+- Happy path:
+  - User enters valid email/password.
+  - API returns 200 with user/session.
+  - App stores session, redirects to dashboard, and shows authenticated UI.
+- Sad path:
+  - Wrong password: show inline error and keep user on login page.
+  - Network timeout: show retry message and preserve typed input.
+  - Server 500: show generic error (no internal details) and log error event.

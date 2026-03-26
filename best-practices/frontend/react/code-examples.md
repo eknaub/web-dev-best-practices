@@ -4,6 +4,12 @@ Practical snippets that pair with [overview.md](./overview.md).
 
 ## Navigation Index
 
+- [SOLID Principles](#solid-principles)
+  - [Single Responsibility (SRP)](#single-responsibility-srp)
+  - [Open/Closed (OCP)](#openclosed-ocp)
+  - [Liskov Substitution (LSP)](#liskov-substitution-lsp)
+  - [Interface Segregation (ISP)](#interface-segregation-isp)
+  - [Dependency Inversion (DIP)](#dependency-inversion-dip)
 - [State & Effects](#state--effects)
   - [Functional state updates](#functional-state-updates)
   - [Avoid derived state in effects](#avoid-derived-state-in-effects)
@@ -53,6 +59,104 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Safe async event handler with try/catch](#safe-async-event-handler-with-trycatch)
 
 ---
+
+## SOLID Principles
+
+### Single Responsibility (SRP)
+
+```tsx
+type User = { id: string; name: string };
+
+function useUsers() {
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((response) => response.json())
+      .then((data: User[]) => setUsers(data));
+  }, []);
+
+  return users;
+}
+
+function UserList() {
+  const users = useUsers();
+  return (
+    <ul>
+      {users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Open/Closed (OCP)
+
+```tsx
+function Card({ children }: { children: React.ReactNode }) {
+  return <section className="card">{children}</section>;
+}
+
+function ProductCard({
+  product,
+}: {
+  product: { name: string; price: number };
+}) {
+  return (
+    <Card>
+      <h3>{product.name}</h3>
+      <p>${product.price}</p>
+    </Card>
+  );
+}
+```
+
+### Liskov Substitution (LSP)
+
+```tsx
+type PrimaryButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+function PrimaryButton({ className, ...rest }: PrimaryButtonProps) {
+  return <button {...rest} className={`btn btn-primary ${className ?? ""}`} />;
+}
+```
+
+### Interface Segregation (ISP)
+
+```tsx
+type AvatarProps = { name: string; imageUrl: string };
+type UserMetaProps = { name: string; email: string };
+
+function Avatar({ name, imageUrl }: AvatarProps) {
+  return <img src={imageUrl} alt={name} />;
+}
+
+function UserMeta({ name, email }: UserMetaProps) {
+  return (
+    <p>
+      {name} ({email})
+    </p>
+  );
+}
+```
+
+### Dependency Inversion (DIP)
+
+```tsx
+type User = { id: string; name: string };
+type UsersApi = { list: () => Promise<User[]> };
+
+function useUsers(api: UsersApi) {
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    api.list().then(setUsers);
+  }, [api]);
+
+  return users;
+}
+```
 
 ## State & Effects
 
