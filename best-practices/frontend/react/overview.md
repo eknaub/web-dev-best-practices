@@ -4,6 +4,7 @@
 
 - [Quick Reference](#quick-reference)
   - [Golden Rules](#golden-rules)
+  - [3 Phases of Rendering](#3-phases-of-rendering)
   - [SOLID Principles](#solid-principles)
   - [Common Pitfalls](#common-pitfalls)
   - [Performance Checklist](#performance-checklist)
@@ -58,8 +59,32 @@
 
 - Use clear naming (`handleX` for internal, `onX` for props).
 - Avoid recreating handlers in large lists when it impacts performance.
-- Clean up listeners, timers, and async work on unmount.
+- **Clean up listeners, timers, and async work on unmount.**
 - Move complex logic out of JSX and into named functions.
+
+## 3 Phases of Rendering
+
+Every React update goes through three sequential phases:
+
+### 1. Trigger
+
+- React is told that a render is needed.
+- Causes: initial render, a `setState` call, a context value change, or a parent re-render.
+- React does not immediately update the DOM — it schedules work.
+
+### 2. Render
+
+- React calls your component functions to compute what the UI should look like.
+- This is **pure** — no DOM writes, no side effects.
+- React builds a new virtual DOM tree and diffs it against the previous one (reconciliation).
+- A component only re-renders if its state, props, or context changed (or its parent did).
+
+### 3. Commit
+
+- React applies the minimal diff to the actual DOM.
+- `useLayoutEffect` fires synchronously after DOM updates, before the browser paints.
+- `useEffect` fires asynchronously after the browser has painted.
+- Skipped entirely if the render phase found no changes.
 
 ## SOLID Principles
 
@@ -132,9 +157,11 @@
 
 ## Performance Checklist
 
+> 💡 Measure first. Don't prematurely optimize.
+
 ### When to Optimize
 
-- Measure first with React DevTools Profiler.
+- Measure with React DevTools Profiler.
 - Prioritize user-perceived lag (typing, scrolling, navigation).
 - Optimize hot paths, not every component.
 - Prefer architectural fixes before micro-optimizations.
@@ -142,9 +169,40 @@
 ### High-Impact Optimizations
 
 - Memoize expensive derived data when profiling confirms need.
+- Memoize components with `memo` when they re-render often with the same props.
 - Stabilize callback references when passing to memoized children.
 - Split large components and contexts by concern.
 - Lazy-load heavy routes/components with `lazy` and `Suspense`.
+
+### When to Use `memo`, `useMemo`, `useCallback`, and `lazy`
+
+> 💡 First fix slow renders, then reduce unnecessary rerenders.
+
+`memo` skips a re-render of a component, when its props are unchanged.
+
+- Use `memo` for pure components that render frequently and usually receive the same props.
+- Use `memo` when profiling shows parent re-renders are repeatedly cascading into unchanged child components.
+- Do not use `memo` on every component by default; shallow prop comparison also has a cost.
+- `memo` works best when prop identities are stable, often together with `useMemo` or `useCallback` where needed.
+
+`useMemo` caches the result of a calculation between renders.
+
+- Use `useMemo` when a derived value is expensive to recompute and the computation runs often enough to matter.
+- Use `useMemo` when referential stability of a computed object/array matters for memoized children or effect dependencies.
+- Do not use `useMemo` for cheap calculations or as a default optimization.
+
+`useCallback` caches a function definition between renders.
+
+- Use `useCallback` when passing handlers to memoized children and unstable function identity is causing avoidable re-renders.
+- Use `useCallback` when a stable function reference is required by another hook or subscription setup.
+- Do not use `useCallback` on every handler by default; it adds indirection without benefit unless identity matters.
+
+`lazy` defers loading a component's code until its rendered for the first time.
+
+- Use `lazy` for route-level code splitting and for heavy components that are not needed on initial load.
+- Use `lazy` for infrequently used surfaces such as modals, admin panels, editors, or complex charts.
+- Do not use `lazy` for tiny components above the fold where extra network round trips can hurt perceived performance.
+- Do not forget to wrap the `lazy` loaded component in a `<Suspense>`, since its loaded on demand.
 
 ### Re-render Triggers to Watch
 

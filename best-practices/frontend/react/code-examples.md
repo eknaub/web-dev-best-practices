@@ -47,6 +47,7 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Bounded retry with backoff](#bounded-retry-with-backoff)
   - [Mirage JS setup](#mirage-js-setup)
 - [Performance](#performance)
+  - [Memoized components with stable props](#memoized-components-with-stable-props)
   - [Memoize expensive derived values](#memoize-expensive-derived-values)
   - [Stable callbacks for memoized children](#stable-callbacks-for-memoized-children)
   - [Lazy-load heavy modules](#lazy-load-heavy-modules)
@@ -1044,7 +1045,38 @@ function UsersPanel() {
 
 ## Performance
 
+### Memoized components with stable props
+
+```jsx
+function UserRow({ user, onDelete }) {
+  console.log("render row", user.id);
+
+  return (
+    <li>
+      <span>{user.name}</span>
+      <button onClick={() => onDelete(user.id)}>Delete</button>
+    </li>
+  );
+}
+
+const MemoizedUserRow = memo(UserRow);
+
+const handleDelete = useCallback((id) => {
+  setUsers((prev) => prev.filter((use r) => user.id !== id));
+}, []);
+
+return (
+  <ul>
+    {users.map((user) => (
+      <MemoizedUserRow key={user.id} user={user} onDelete={handleDelete} />
+    ))}
+  </ul>
+);
+```
+
 ### Memoize expensive derived values
+
+Note: When passing an object (or array) as a prop to a memoized component, use `useMemo` to maintain referential equality. Without it, a new object is created on every render, causing the memoized child to re-render even if the logical value hasn't changed.
 
 ```jsx
 const filteredUsers = useMemo(() => {
