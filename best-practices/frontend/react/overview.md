@@ -10,6 +10,7 @@
   - [Performance Checklist](#performance-checklist)
   - [Security Essentials](#security-essentials)
   - [Quick Decision Trees](#quick-decision-trees)
+  - [State Initialization](#state-initialization)
   - [React 18+ Features & Patterns](#react-18-features--patterns)
   - [React 19 Features](#react-19-features)
   - [Error Handling Essentials](#error-handling-essentials)
@@ -30,6 +31,7 @@
   - [Headless Patterns](#headless-patterns)
   - [Prop Drilling vs Composition vs Context](#prop-drilling-vs-composition-vs-context)
   - [Children Patterns](#children-patterns)
+  - [Centering Elements](#centering-elements)
   - [TypeScript Best Practices](#typescript-best-practices)
   - [Testing Quick Tips](#testing-quick-tips)
   - [Happy Path and Sad Path](#happy-path-and-sad-path)
@@ -250,6 +252,15 @@ Every React update goes through three sequential phases:
 - `useCallback`: stable function references.
 - `useRef`: mutable instance value or DOM access. Example: [Code Examples](./code-examples.md#useref-for-dom-and-mutable-values)
 - `useId`: accessible unique IDs.
+
+## State Initialization
+
+- Use lazy initialization for `useState` when initial computation is expensive.
+- Use lazy initialization when reading one-time client values (for example, `localStorage`).
+- Pass a function (`useState(() => initialValue)`) so initialization runs only on first render.
+- Keep initializer functions pure and synchronous; do async bootstrap work in effects.
+
+- Lazy initialization snippet: [Code Examples](./code-examples.md#lazy-initialization-with-usestate)
 
 ## React 18+ Features & Patterns
 
@@ -490,6 +501,14 @@ Every React update goes through three sequential phases:
 - Keep composition APIs consistent across component families.
 
 - Children examples: [Code Examples](./code-examples.md#children-as-structure-data-as-behavior)
+
+## Centering Elements
+
+- To center on both axes, use a parent with Flexbox (`display: flex`) or Grid (`display: grid`).
+- For horizontal-only centering of a fixed-width block, use `margin: 0 auto` (block-level element + set width/max-width).
+- To center inline/text content, use `text-align: center` on the parent.
+
+- Centering snippets: [Code Examples](./code-examples.md#centering-an-element)
 
 ## TypeScript Best Practices
 

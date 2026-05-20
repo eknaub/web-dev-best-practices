@@ -12,6 +12,7 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Dependency Inversion (DIP)](#dependency-inversion-dip)
 - [State & Effects](#state--effects)
   - [Functional state updates](#functional-state-updates)
+  - [Lazy initialization with useState](#lazy-initialization-with-usestate)
   - [Avoid derived state in effects](#avoid-derived-state-in-effects)
   - [Effect cleanup with AbortController](#effect-cleanup-with-abortcontroller)
   - [Stable keys for list rendering](#stable-keys-for-list-rendering)
@@ -58,6 +59,11 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Error boundary for UI failures](#error-boundary-for-ui-failures)
   - [Early-return conditional rendering](#early-return-conditional-rendering)
   - [Safe async event handler with try/catch](#safe-async-event-handler-with-trycatch)
+- [Styling & Layout](#styling--layout)
+  - [Centering an element](#centering-an-element)
+    - [Center horizontally + vertically (flex/grid)](#center-horizontally--vertically-flexgrid)
+    - [Center a block horizontally (margin auto)](#center-a-block-horizontally-margin-auto)
+    - [Center inline/text content](#center-inlinetext-content)
 
 ---
 
@@ -170,6 +176,23 @@ function incrementTwice() {
   setCount((prev) => prev + 1);
   setCount((prev) => prev + 1);
 }
+```
+
+### Lazy initialization with useState
+
+```tsx
+type CartItem = { id: string; quantity: number };
+
+const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+  const storedCart = localStorage.getItem("cart-items");
+  if (!storedCart) return [];
+
+  try {
+    return JSON.parse(storedCart) as CartItem[];
+  } catch {
+    return [];
+  }
+});
 ```
 
 ### Avoid derived state in effects
@@ -1201,5 +1224,59 @@ async function handleSave() {
     toast.error("Save failed");
     console.error(error);
   }
+}
+```
+
+## Styling & Layout
+
+### Centering an element
+
+Pick the method based on what you need to center.
+
+#### Center horizontally + vertically (flex/grid)
+
+```html
+<div class="parent">
+  <div class="child">Centered</div>
+</div>
+```
+
+```css
+.parent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Alternative */
+.parent-grid {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+```
+
+#### Center a block horizontally (margin auto)
+
+```css
+.child {
+  display: block;
+  width: 300px;
+  margin: 0 auto;
+}
+```
+
+#### Center inline/text content
+
+```html
+<div class="text-parent">
+  <span class="badge">Centered inline content</span>
+</div>
+```
+
+```css
+.text-parent {
+  text-align: center;
 }
 ```
