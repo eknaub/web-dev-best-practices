@@ -64,6 +64,7 @@ Practical snippets that pair with [overview.md](./overview.md).
     - [Center horizontally + vertically (flex/grid)](#center-horizontally--vertically-flexgrid)
     - [Center a block horizontally (margin auto)](#center-a-block-horizontally-margin-auto)
     - [Center inline/text content](#center-inlinetext-content)
+  - [Margin/padding shorthand](#marginpadding-shorthand)
 
 ---
 
@@ -1278,5 +1279,43 @@ Pick the method based on what you need to center.
 ```css
 .text-parent {
   text-align: center;
+}
+```
+
+### Margin/padding shorthand
+
+```css
+/* 1 value: all sides */
+.box {
+  margin: 16px;
+  padding: 12px;
+}
+
+/* 2 values: vertical | horizontal */
+.box {
+  margin: 12px 24px;
+  padding: 8px 16px;
+}
+
+/* 3 values: top | horizontal | bottom */
+.box {
+  margin: 8px 20px 12px;
+  padding: 4px 12px 16px;
+}
+
+/* 4 values (clockwise): top | right | bottom | left */
+.box {
+  margin: 8px 16px 12px 20px;
+  padding: 6px 10px 14px 18px;
+}
+```
+
+```css
+/* Axis-based logical properties */
+.box {
+  margin-block: 12px; /* top + bottom */
+  margin-inline: 24px; /* left + right in LTR */
+  padding-block: 8px;
+  padding-inline: 16px;
 }
 ```

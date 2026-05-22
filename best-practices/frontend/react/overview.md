@@ -11,6 +11,7 @@
   - [Security Essentials](#security-essentials)
   - [Quick Decision Trees](#quick-decision-trees)
   - [State Initialization](#state-initialization)
+  - [When to Use Nullish Coalescing vs Logical OR](#when-to-use-nullish-coalescing-vs-logical-or)
   - [React 18+ Features & Patterns](#react-18-features--patterns)
   - [React 19 Features](#react-19-features)
   - [Error Handling Essentials](#error-handling-essentials)
@@ -32,6 +33,7 @@
   - [Prop Drilling vs Composition vs Context](#prop-drilling-vs-composition-vs-context)
   - [Children Patterns](#children-patterns)
   - [Centering Elements](#centering-elements)
+  - [Spacing Shorthand (Margin/Padding)](#spacing-shorthand-marginpadding)
   - [TypeScript Best Practices](#typescript-best-practices)
   - [Testing Quick Tips](#testing-quick-tips)
   - [Happy Path and Sad Path](#happy-path-and-sad-path)
@@ -261,6 +263,30 @@ Every React update goes through three sequential phases:
 - Keep initializer functions pure and synchronous; do async bootstrap work in effects.
 
 - Lazy initialization snippet: [Code Examples](./code-examples.md#lazy-initialization-with-usestate)
+
+## When to Use Nullish Coalescing vs Logical OR
+
+- Use `??` when the fallback should apply only to `null` or `undefined`.
+- Use `||` when any falsy value should trigger the fallback.
+- Prefer `??` for API values, counters, and form fields where `0`, `false`, or `""` can be valid.
+- Prefer `||` when an empty or falsy value should be treated as missing.
+
+```jsx
+const count = 0;
+const title = "";
+const isAdmin = false;
+
+count || 10; // 10
+count ?? 10; // 0
+
+title || "Untitled"; // "Untitled"
+title ?? "Untitled"; // ""
+
+isAdmin || true; // true
+isAdmin ?? true; // false
+```
+
+Rule of thumb: if `0`, `false`, or an empty string are valid values, use `??` instead of `||`. If you want these values to trigger a fallback use `||`.
 
 ## React 18+ Features & Patterns
 
@@ -509,6 +535,17 @@ Every React update goes through three sequential phases:
 - To center inline/text content, use `text-align: center` on the parent.
 
 - Centering snippets: [Code Examples](./code-examples.md#centering-an-element)
+
+## Spacing Shorthand (Margin/Padding)
+
+- Shorthand order is clockwise: top, right, bottom, left.
+- 1 value applies to all sides (for example `margin: 16px`).
+- 2 values apply to vertical then horizontal (`top/bottom`, `left/right`).
+- 3 values apply to `top`, `left/right`, `bottom`.
+- 4 values apply to `top`, `right`, `bottom`, `left`.
+- Axis shorthands are useful for readability: `margin-block`, `margin-inline`, `padding-block`, `padding-inline`.
+
+- Spacing shorthand snippets: [Code Examples](./code-examples.md#marginpadding-shorthand)
 
 ## TypeScript Best Practices
 
