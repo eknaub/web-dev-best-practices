@@ -53,6 +53,16 @@ Practical snippets that pair with [overview.md](./overview.md).
   - [Stable callbacks for memoized children](#stable-callbacks-for-memoized-children)
   - [Lazy-load heavy modules](#lazy-load-heavy-modules)
 - [Accessibility & TypeScript](#accessibility--typescript)
+  - [Text color contrast](#text-color-contrast)
+  - [Alt text for informative and decorative images](#alt-text-for-informative-and-decorative-images)
+  - [ARIA live region for async status updates](#aria-live-region-for-async-status-updates)
+  - [Hiding content accessibly](#hiding-content-accessibly)
+  - [Descriptive links with visible underline](#descriptive-links-with-visible-underline)
+  - [Input labels and placeholder as example text](#input-labels-and-placeholder-as-example-text)
+  - [Fieldset and legend for grouped controls](#fieldset-and-legend-for-grouped-controls)
+  - [Landmark regions page shell](#landmark-regions-page-shell)
+  - [Use rem for font sizing](#use-rem-for-font-sizing)
+  - [Heading hierarchy (one h1, no skipped levels)](#heading-hierarchy-one-h1-no-skipped-levels)
   - [Label/input association and error messaging](#labelinput-association-and-error-messaging)
   - [Typed props with explicit interfaces](#typed-props-with-explicit-interfaces)
 - [Error Handling & Rendering](#error-handling--rendering)
@@ -1136,6 +1146,246 @@ return (
 ```
 
 ## Accessibility & TypeScript
+
+### Text color contrast
+
+```css
+:root {
+  --text-primary: #1b1f24;
+  --text-muted: #44515f;
+  --surface: #ffffff;
+  --focus-ring: #0b63ce;
+}
+
+body {
+  color: var(--text-primary); /* strong contrast on white */
+  background-color: var(--surface);
+}
+
+.help-text {
+  color: var(--text-muted); /* still readable, not too faint */
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+```
+
+### Alt text for informative and decorative images
+
+```jsx
+function ProductMedia() {
+  return (
+    <section>
+      {/* Informative image: alt describes purpose */}
+      <img
+        src="/images/wireless-headphones.jpg"
+        alt="Wireless headphones with noise cancellation"
+      />
+
+      {/* Decorative image: empty alt hides it from screen readers */}
+      <img src="/images/divider-wave.svg" alt="" role="presentation" />
+    </section>
+  );
+}
+```
+
+### ARIA live region for async status updates
+
+```jsx
+function SaveProfileButton() {
+  const [statusMessage, setStatusMessage] = useState("");
+
+  async function handleSave() {
+    setStatusMessage("Saving profile...");
+
+    try {
+      await saveProfile();
+      setStatusMessage("Profile saved successfully.");
+    } catch {
+      setStatusMessage("Save failed. Please try again.");
+    }
+  }
+
+  return (
+    <div>
+      <button type="button" onClick={handleSave}>
+        Save profile
+      </button>
+
+      {/* Polite live region for non-blocking updates */}
+      <p role="status" aria-live="polite" aria-atomic="true">
+        {statusMessage}
+      </p>
+    </div>
+  );
+}
+```
+
+### Hiding content accessibly
+
+```css
+/* Visible only to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+```
+
+```jsx
+function CheckoutSummary({ cartCount }: { cartCount: number }) {
+  return (
+    <section>
+      {/* Hidden from everyone when not needed */}
+      <p hidden={cartCount === 0}>You have items ready to checkout.</p>
+
+      {/* Hidden visually, but announced by screen readers */}
+      <p className="sr-only">Cart has {cartCount} items.</p>
+
+      {/* Decorative icon only */}
+      <span aria-hidden="true">🛒</span>
+    </section>
+  );
+}
+```
+
+### Descriptive links with visible underline
+
+```jsx
+<p>
+  Read the <a href="/docs/password-policy">password policy requirements</a>
+  before creating an account.
+</p>
+```
+
+```css
+a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover,
+a:focus-visible {
+  text-decoration-thickness: 2px;
+}
+```
+
+### Input labels and placeholder as example text
+
+```jsx
+function ContactForm() {
+  return (
+    <form>
+      <label htmlFor="phone">Phone number</label>
+      <input id="phone" name="phone" placeholder="Example: +1 555 123 4567" />
+
+      <label htmlFor="company">Company website</label>
+      <input
+        id="company"
+        name="company"
+        placeholder="Example: https://acme.com"
+      />
+    </form>
+  );
+}
+```
+
+### Fieldset and legend for grouped controls
+
+```jsx
+function ContactPreference() {
+  return (
+    <fieldset>
+      <legend>Preferred contact method</legend>
+
+      <label>
+        <input type="radio" name="contact" value="email" /> Email
+      </label>
+      <label>
+        <input type="radio" name="contact" value="phone" /> Phone
+      </label>
+    </fieldset>
+  );
+}
+```
+
+### Landmark regions page shell
+
+```jsx
+function PageLayout() {
+  return (
+    <>
+      <header>
+        <h1>Account settings</h1>
+      </header>
+
+      <nav aria-label="Primary">
+        <a href="/settings/profile">Profile</a>
+        <a href="/settings/security">Security</a>
+      </nav>
+
+      <main>
+        <section aria-labelledby="security-title">
+          <h2 id="security-title">Security settings</h2>
+          <p>Manage your password, 2FA, and active sessions.</p>
+        </section>
+      </main>
+
+      <footer>
+        <small>Last updated: June 2026</small>
+      </footer>
+    </>
+  );
+}
+```
+
+### Use rem for font sizing
+
+```css
+html {
+  font-size: 100%; /* usually 16px */
+}
+
+body {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: 2rem; /* scales with user preference */
+}
+
+.small-note {
+  font-size: 0.875rem;
+}
+```
+
+### Heading hierarchy (one h1, no skipped levels)
+
+```jsx
+function ArticlePage() {
+  return (
+    <main>
+      <h1>Checkout guide</h1>
+      <h2>Shipping information</h2>
+      <h3>International delivery windows</h3>
+
+      <h2>Payment options</h2>
+      <h3>Saved cards</h3>
+    </main>
+  );
+}
+```
 
 ### Label/input association and error messaging
 

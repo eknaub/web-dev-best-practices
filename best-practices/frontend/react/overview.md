@@ -12,12 +12,23 @@
   - [Quick Decision Trees](#quick-decision-trees)
   - [State Initialization](#state-initialization)
   - [When to Use Nullish Coalescing vs Logical OR](#when-to-use-nullish-coalescing-vs-logical-or)
+  - [Truthy and Falsy Values](#truthy-and-falsy-values)
   - [React 18+ Features & Patterns](#react-18-features--patterns)
   - [React 19 Features](#react-19-features)
   - [Error Handling Essentials](#error-handling-essentials)
   - [Conditional Rendering Patterns](#conditional-rendering-patterns)
   - [Fragment Best Practices](#fragment-best-practices)
   - [Accessibility Quick Wins](#accessibility-quick-wins)
+    - [Text Color Contrast](#text-color-contrast)
+    - [Alt Text for Images](#alt-text-for-images)
+    - [ARIA Live Regions](#aria-live-regions)
+    - [Hiding Content Accessibly](#hiding-content-accessibly)
+    - [Better Links (Descriptive + Visible)](#better-links-descriptive--visible)
+    - [Input Labels + Placeholder Usage](#input-labels--placeholder-usage)
+    - [Fieldset and Legend for Grouped Controls](#fieldset-and-legend-for-grouped-controls)
+    - [Landmark Regions](#landmark-regions)
+    - [Use rem for Font Sizes](#use-rem-for-font-sizes)
+    - [Heading Structure](#heading-structure)
   - [Critical Accessibility Principles](#critical-accessibility-principles)
   - [Form Handling Best Practices](#form-handling-best-practices)
   - [API/Fetch Patterns](#apifetch-patterns)
@@ -288,6 +299,25 @@ isAdmin ?? true; // false
 
 Rule of thumb: if `0`, `false`, or an empty string are valid values, use `??` instead of `||`. If you want these values to trigger a fallback use `||`.
 
+## Truthy and Falsy Values
+
+- Truthy values behave like `true` in condition checks.
+- Falsy values behave like `false` in condition checks.
+- JavaScript falsy values are: `false`, `0`, `""`, `null`, `undefined`, and `NaN`.
+- Most other values are truthy (including non-empty strings, non-zero numbers, arrays, and objects).
+- Convert any value to a boolean with `!!value`. (converts the value to boolean and double-flips it)
+- `Boolean(value)` does the same conversion and is often more readable.
+- Avoid `new Boolean(false)`: it creates an object, and objects are truthy in conditions.
+
+```jsx
+if (value) {
+  // Runs only when value is truthy
+}
+
+const a = !!value;
+const b = Boolean(value); // same result as !!value
+```
+
 ## React 18+ Features & Patterns
 
 ### Automatic Batching
@@ -369,6 +399,76 @@ Rule of thumb: if `0`, `false`, or an empty string are valid values, use `??` in
 - Maintain visible focus indicators.
 - Test color contrast in all themes/states.
 
+### Text Color Contrast
+
+- Ensure body text contrast is at least 4.5:1 against its background.
+- Ensure large text (18px regular or 14px bold and larger) is at least 3:1.
+- Ensure UI controls and focus indicators are at least 3:1 against adjacent colors.
+- Avoid low-contrast placeholder text; users should still be able to read hint content.
+
+### Alt Text for Images
+
+- Provide meaningful `alt` text for informative images.
+- Use `alt=""` for decorative images so screen readers skip them.
+- Do not start alt text with "image of" or "photo of" unless that context matters.
+- If nearby text already fully explains the image, keep alt text short and avoid repetition.
+
+### ARIA Live Regions
+
+- Use live regions for dynamic status messages that appear without focus change.
+- Use `aria-live="polite"` for non-urgent updates (for example, "Saved" or filter results count).
+- Use `aria-live="assertive"` only for urgent interruptions that must be announced immediately.
+- Use `role="status"` for polite status messages and `role="alert"` for urgent errors.
+- Keep announcements short and avoid updating the live region too frequently.
+- Prefer one stable live region element and update its text instead of mounting many temporary nodes.
+
+### Hiding Content Accessibly
+
+- Hide content from everyone (visual + assistive tech) with `hidden`, `display: none`, or `visibility: hidden` when it is not relevant.
+- Hide content visually but keep it available to screen readers using a visually-hidden utility class (for example `.sr-only`).
+- Use `aria-hidden="true"` only for purely decorative or duplicate content.
+- Never apply `aria-hidden="true"` to focusable/interactive elements.
+- Do not rely on `opacity: 0` alone to hide important content; it may still be focusable/announced depending on markup.
+
+### Better Links (Descriptive + Visible)
+
+- Use descriptive link text that makes sense out of context.
+- Avoid generic text such as "click here" or "read more" without context.
+- Keep links visually identifiable (underline is recommended, at least on hover/focus).
+- Distinguish links from regular text with more than color alone.
+
+### Input Labels + Placeholder Usage
+
+- Every input needs a visible label, even when the field seems obvious.
+- Use placeholder text only for examples or format hints, not as the label.
+- Keep labels concise and specific to reduce ambiguity in forms.
+- Connect labels, help text, and errors using `htmlFor`, `id`, and `aria-describedby`.
+
+### Fieldset and Legend for Grouped Controls
+
+- Group related controls (radio groups, checkbox groups, address groups) with `fieldset`.
+- Use `legend` as the accessible group title; it is announced by assistive tech.
+- Keep legend text short and meaningful (for example, "Preferred contact method").
+
+### Landmark Regions
+
+- Structure pages with semantic landmarks: `header`, `nav`, `main`, `section`, `aside`, `footer`.
+- Keep one primary `main` landmark per page.
+- Add labels for repeated landmarks when needed (`aria-label` for multiple `nav` elements).
+
+### Use rem for Font Sizes
+
+- Prefer `rem` for typography so text scales with user/browser settings.
+- Base reference: `1rem = 16px` in default browser settings.
+- Use fixed `px` values sparingly (for hairline borders or icon pixel alignment).
+
+### Heading Structure
+
+- Use one page-level `h1`.
+- Keep heading levels sequential (`h1` -> `h2` -> `h3`) and avoid skipping levels.
+- Use headings for document structure, not just visual styling.
+- If only style is needed, use CSS classes on semantic elements instead of incorrect heading levels.
+
 - Practical A11y examples: [Code Examples](./code-examples.md#accessibility--typescript)
 
 ## Critical Accessibility Principles
@@ -386,6 +486,8 @@ Rule of thumb: if `0`, `false`, or an empty string are valid values, use `??` in
 - Avoid keyboard traps.
 - Programmatically manage focus after major UI changes.
 - Keep interactive hit areas comfortably large.
+- Be careful with mouse-only events (`mouseover`, `mouseenter`, `mouseout`); they do not reliably work for keyboard, touch, or screen reader users.
+- Prefer semantic controls and event patterns that support multiple input modes (`onFocus`/`onBlur`, `onClick`, keyboard handlers when needed).
 
 ### ARIA Usage
 
