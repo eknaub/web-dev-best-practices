@@ -5,6 +5,7 @@
 - [CSS and Layout Basics](#css-and-layout-basics)
   - [Display Types](#display-types)
   - [Overflow](#overflow)
+  - [Positioning](#positioning)
   - [Centering](#centering)
   - [Spacing Shorthand](#spacing-shorthand)
   - [CSS Specificity](#css-specificity)
@@ -61,9 +62,21 @@
 - Use `overflow: hidden`, `overflow: auto`, or `overflow: scroll` when content exceeds the box.
 - Pair overflow control with `block` or `inline-block` depending on whether the element should stay in flow or behave like a box.
 
+### Positioning
+
+- Keep `position: static` as the default; switch to `relative`, `absolute`, `fixed`, or `sticky` only when the layout needs it.
+- Use `relative` on a parent when an absolutely positioned child should anchor to that container.
+- Prefer Flexbox or Grid for the main layout; use positioning for overlays, badges, tooltips, popovers, and pinned UI.
+- Remember that `absolute` removes an element from normal flow, so neighboring content will not reserve space for it.
+- Use `sticky` for headers or sidebars that should remain in flow until they reach a scroll threshold.
+- For visually hidden content, prefer the `.sr-only` pattern instead of moving elements off-screen with large negative positions.
+
+- Example snippet: [Hiding content accessibly](./general-code-examples.md#hiding-content-accessibly)
+
 ### Centering
 
 - Use Flexbox or Grid to center on both axes.
+- Use `align-self` on a child when one item needs different cross-axis alignment than its siblings; it overrides the parent `align-items` for that item.
 - Use `margin: 0 auto` for horizontal centering of a fixed-width block.
 - Use `text-align: center` to center inline or text content.
 
