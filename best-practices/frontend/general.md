@@ -9,6 +9,7 @@
   - [Centering](#centering)
   - [Spacing Shorthand](#spacing-shorthand)
   - [CSS Specificity](#css-specificity)
+  - [CSS Units: em vs rem vs percent vs px](#css-units-em-vs-rem-vs-percent-vs-px)
 - [SOLID Principles](#solid-principles)
   - [Single Responsibility Principle (SRP)](#single-responsibility-principle-srp)
   - [Open/Closed Principle (OCP)](#openclosed-principle-ocp)
@@ -20,6 +21,8 @@
   - [General Security Rules](#general-security-rules)
 - [When to Use Nullish Coalescing vs Logical OR](#when-to-use-nullish-coalescing-vs-logical-or)
 - [Truthy and Falsy Values](#truthy-and-falsy-values)
+- [dataset in JavaScript](#dataset-in-javascript)
+  - [dataset on DOM elements](#dataset-on-dom-elements)
 - [Error Handling Essentials](#error-handling-essentials)
   - [Error Boundary Strategy](#error-boundary-strategy)
   - [What Boundaries Don't Catch](#what-boundaries-dont-catch)
@@ -40,6 +43,7 @@
   - [Keyboard and Focus](#keyboard-and-focus)
   - [ARIA Usage](#aria-usage)
 - [Form Handling Best Practices](#form-handling-best-practices)
+- [DOM Traversal and parentElement](#dom-traversal-and-parentelement)
 - [API/Fetch Patterns](#apifetch-patterns)
 - [Mirage JS Mock Server](#mirage-js-mock-server)
 - [TypeScript Best Practices](#typescript-best-practices)
@@ -101,6 +105,15 @@ Examples:
 - `.card .title` (20) beats `section h2` (2)
 - `.btn.primary` (20) beats `.btn` (10)
 - `section .ad-container #req-list ul li` (113) beats `body section .ad-container div .general-list li` (24)
+
+### CSS Units: em vs rem vs percent vs px
+
+- Use `rem` by default for typography and spacing tokens to keep scaling consistent with user font settings.
+- Use `em` when a component should scale relative to its own text size (for example compact and large variants).
+- Use `%` for fluid widths/heights and layout relationships inside a container.
+- Use `px` for hairline borders, fine visual adjustments, and places where you need exact device-pixel control.
+
+- Full chapter: [CSS Units Reference](./css-units.md)
 
 ## SOLID Principles
 
@@ -204,6 +217,29 @@ if (value) {
 
 const a = !!value;
 const b = Boolean(value); // same result as !!value
+```
+
+## dataset in JavaScript
+
+### dataset on DOM elements
+
+- `dataset` is a DOM API for reading and writing custom `data-*` attributes.
+- In HTML, write attributes as `data-user-id`, `data-role`, etc.
+- In JavaScript, access them through camelCase keys like `element.dataset.userId` and `element.dataset.role`.
+- Values in `dataset` are always strings, so parse when needed (`Number(...)`, `JSON.parse(...)`).
+- Use `data-*` for lightweight UI metadata, not for storing sensitive or large application state.
+
+```html
+<button id="saveBtn" data-user-id="42" data-mode="draft">Save</button>
+```
+
+```js
+const saveBtn = document.getElementById("saveBtn");
+
+const userId = Number(saveBtn.dataset.userId);
+const mode = saveBtn.dataset.mode;
+
+saveBtn.dataset.mode = "published";
 ```
 
 ## Error Handling Essentials
@@ -344,6 +380,15 @@ const b = Boolean(value); // same result as !!value
 - Use consistent error and success messaging patterns.
 
 - Form snippets: [Code Examples](./general-code-examples.md#forms--api)
+
+## DOM Traversal and parentElement
+
+- Use `parentElement` to move up one level in the DOM tree; it returns `null` if there is no parent element.
+- Prefer `closest(selector)` over chaining `parentElement` multiple times; it walks up the tree and returns the first matching ancestor.
+- Use `closest()` for event delegation patterns (e.g., clicking a button inside a card should close the card).
+- `parentElement` returns the element node; use `parentNode` if you need to include text or comment nodes (rarely needed).
+- Avoid long traversal chains; instead, use data attributes or pass references/callbacks, especially in frameworks.
+- In React, Vue, or Angular, prefer refs or component composition over DOM traversal whenever possible.
 
 ## API/Fetch Patterns
 
