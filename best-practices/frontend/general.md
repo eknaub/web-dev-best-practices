@@ -8,6 +8,7 @@
   - [Positioning](#positioning)
   - [Centering](#centering)
   - [Spacing Shorthand](#spacing-shorthand)
+  - [Box Sizing](#box-sizing)
   - [CSS Specificity](#css-specificity)
   - [CSS Units: em vs rem vs percent vs px](#css-units-em-vs-rem-vs-percent-vs-px)
 - [SOLID Principles](#solid-principles)
@@ -82,6 +83,7 @@
 - Use Flexbox or Grid to center on both axes.
 - Use `align-self` on a child when one item needs different cross-axis alignment than its siblings; it overrides the parent `align-items` for that item.
 - Use `margin: 0 auto` for horizontal centering of a fixed-width block.
+- For long-form text, use a centered content container with a `max-width` (around `65ch` to `75ch`) so line length stays readable on large screens while remaining fluid on mobile.
 - Use `text-align: center` to center inline or text content.
 
 ### Spacing Shorthand
@@ -89,6 +91,26 @@
 - Margin and padding follow clockwise order: top, right, bottom, left.
 - One value applies to all sides, two values apply to vertical and horizontal, three values apply to top, horizontal, bottom, and four values apply to all sides.
 - Logical properties such as `margin-block`, `margin-inline`, `padding-block`, and `padding-inline` are often easier to read.
+
+### Box Sizing
+
+- `content-box` (default) means declared `width` and `height` apply only to content; padding and border increase the final rendered size.
+- `border-box` includes padding and border inside declared `width` and `height`, which makes layouts easier to predict.
+- Prefer a global `box-sizing: border-box` reset to avoid accidental overflow and math-heavy width calculations.
+- With `border-box`, a card set to `width: 320px` stays 320px total even after adding padding and border.
+- Include pseudo-elements in the reset so generated content follows the same sizing model.
+
+```css
+html {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+```
 
 ### CSS Specificity
 
