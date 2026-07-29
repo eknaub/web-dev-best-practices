@@ -11,6 +11,8 @@
   - [Box Sizing](#box-sizing)
   - [CSS Specificity](#css-specificity)
   - [CSS Units: em vs rem vs percent vs px](#css-units-em-vs-rem-vs-percent-vs-px)
+  - [CSS Grid Basics](#css-grid-basics)
+  - [CSS Flexbox Basics](#css-flexbox-basics)
 - [SOLID Principles](#solid-principles)
   - [Single Responsibility Principle (SRP)](#single-responsibility-principle-srp)
   - [Open/Closed Principle (OCP)](#openclosed-principle-ocp)
@@ -137,6 +139,66 @@ Examples:
 
 - Full chapter: [CSS Units Reference](./css-units.md)
 
+### CSS Grid Basics
+
+- CSS Grid is best for two-dimensional layout, where you need control of both rows and columns.
+- Define tracks on the container with `grid-template-columns` and `grid-template-rows`.
+- Use `gap` for consistent spacing instead of manual margins between grid items.
+- Use `repeat()` and `minmax()` for responsive layouts that adapt without many media queries.
+- Use named areas for readable page-level templates.
+
+```css
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-areas:
+    "main aside"
+    "main widgets";
+  gap: 1rem;
+}
+```
+
+When to prefer Grid:
+
+- Page sections with clear row/column structure.
+- Card galleries and dashboards.
+- Layouts where items may span multiple columns or rows.
+
+### CSS Flexbox Basics
+
+- Flexbox is best for one-dimensional layout: either a row or a column.
+- Set `display: flex` on the parent, then control axis behavior with `flex-direction`.
+- Use `justify-content` for main-axis alignment and `align-items` for cross-axis alignment.
+- Use `flex-wrap` when items should move to a new line on smaller screens.
+- Use `gap` for spacing between flex items.
+
+```css
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+```
+
+When to prefer Flexbox:
+
+- Navigation bars, toolbars, and button groups.
+- Vertical stacks with predictable spacing and alignment.
+- Components where content size is dynamic and should distribute naturally.
+
 ## SOLID Principles
 
 ### Single Responsibility Principle (SRP)
@@ -187,7 +249,7 @@ Examples:
 
 - React escapes text by default when rendering values.
 - Treat raw HTML rendering as high risk.
-- Sanitize untrusted HTML before rendering.
+- Sanitize untrusted HTML before rendering (for example with DOMPurify).
 - Validate and sanitize user-provided URLs.
 
 ### General Security Rules
